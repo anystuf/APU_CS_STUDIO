@@ -12,7 +12,7 @@ import { TeacherSubmissionsPage } from './pages/TeacherSubmissionsPage'
 
 const StudentCoursePage = lazy(() => import('./pages/StudentLearningPage').then(module => ({ default: module.StudentCoursePage })))
 const PythonActivityPage = lazy(() => import('./pages/StudentLearningPage').then(module => ({ default: module.PythonActivityPage })))
-const PythonIdePage = lazy(() => import('./pages/PythonIdePage').then(module => ({ default: module.PythonIdePage })))
+const PythonIdePage = lazy(() => import('./pages/PythonWorkspace').then(module => ({ default: module.PythonWorkspacePage })))
 const AssessmentsPage = lazy(() => import('./pages/AssessmentsPage').then(module => ({ default: module.AssessmentsPage })))
 const AssessmentBuilderPage = lazy(() => import('./pages/AssessmentBuilderPage').then(module => ({ default: module.AssessmentBuilderPage })))
 const AssessmentWorkspacePage = lazy(() => import('./pages/AssessmentWorkspacePage').then(module => ({ default: module.AssessmentWorkspacePage })))
