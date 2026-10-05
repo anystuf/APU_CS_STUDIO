@@ -1,0 +1,13 @@
+export type Course = { id: string; title: string; description: string; status: 'draft'|'published'|'archived'; teacher_id: string }
+export type Module = { id: string; course_id: string; title: string; description: string; position: number; status: string }
+export type Lesson = { id: string; module_id: string; title: string; introduction: string; learning_objectives: string[]; vocabulary: string[]; position: number; status: string }
+export type Activity = { id: string; lesson_id: string; title: string; instructions: string; activity_type: string; difficulty: string; max_score: number; status: string; cs_coding_challenges?: Challenge | Challenge[] }
+export type Challenge = { activity_id: string; starter_code: string; allow_input: boolean; cs_coding_test_cases?: TestCase[] }
+export type TestCase = { id: string; input: string; expected_output?: string; visibility: 'public'|'hidden'; position: number }
+export type Profile = { id: string; full_name: string; email: string; role: string }
+export type Attempt = { id: string; activity_id: string; student_id: string; code: string; stdout: string; score: number; status: string; attempt_number: number; submitted_at: string; test_results: TestResult[]; cs_profiles?: Profile; cs_activities?: { title: string }; cs_teacher_feedback?: TeacherFeedback[] }
+export type TestResult = { name: string; passed: boolean; expected?: string; actual?: string }
+export type CourseInvite = { id: string; course_id: string; email: string; status: 'pending'|'accepted'|'cancelled'; created_at: string }
+export type TeacherFeedback = { id: string; attempt_id: string; student_id: string; teacher_id: string; comment: string; created_at: string; cs_activity_attempts?: Attempt }
+export type WorkspaceFeedback = { id: string; workspace_id: string; student_id: string; teacher_id: string; comment: string; created_at: string; updated_at: string }
+export type CodeWorkspace = { id: string; activity_id: string; student_id: string; code: string; created_at: string; updated_at: string; cs_profiles?: Profile; cs_activities?: { title: string }; cs_workspace_feedback?: WorkspaceFeedback[] }

@@ -1,0 +1,1 @@
+-- Seed content is added after a teacher Auth account exists so all ownership links remain valid.
