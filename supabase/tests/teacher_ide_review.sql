@@ -1,0 +1,24 @@
+begin;
+create temp table apu_review_fixture(label text,id uuid) on commit drop;
+insert into apu_review_fixture select label,gen_random_uuid() from unnest(array['teacher','other_teacher','student','other_student','admin']) label;
+grant select on apu_review_fixture to authenticated;
+insert into auth.users(id,email,raw_user_meta_data) select id,'review-test-'||id||'@example.com','{}'::jsonb from apu_review_fixture;
+update public.cs_profiles p set role=(case f.label when 'teacher' then 'teacher' when 'other_teacher' then 'teacher' when 'admin' then 'admin' else 'student' end)::public.cs_user_role from apu_review_fixture f where f.id=p.id;
+insert into public.cs_courses(id,teacher_id,title,status) select id,id,'Temporary review test','draft' from apu_review_fixture where label='teacher';
+insert into public.cs_enrollments(course_id,student_id) select t.id,s.id from apu_review_fixture t,apu_review_fixture s where t.label='teacher' and s.label='student';
+insert into public.cs_ide_projects(user_id,files,active_file) select id,'[{"name":"main.py","code":"print(1)"}]'::jsonb,'main.py' from apu_review_fixture where label in ('student','other_student');
+set local role authenticated;
+select set_config('request.jwt.claims',json_build_object('sub',(select id from apu_review_fixture where label='teacher'),'role','authenticated')::text,true);
+do $$ begin
+  if (select count(*) from public.cs_ide_projects)<>1 then raise exception 'Teacher scope failed'; end if;
+  update public.cs_ide_projects set stdin='tampered' where user_id=(select id from apu_review_fixture where label='student');
+  if found then raise exception 'Teacher edit isolation failed'; end if;
+end $$;
+select set_config('request.jwt.claims',json_build_object('sub',(select id from apu_review_fixture where label='other_teacher'),'role','authenticated')::text,true);
+do $$ begin if (select count(*) from public.cs_ide_projects)<>0 then raise exception 'Unrelated teacher isolation failed'; end if; end $$;
+select set_config('request.jwt.claims',json_build_object('sub',(select id from apu_review_fixture where label='student'),'role','authenticated')::text,true);
+do $$ begin if (select count(*) from public.cs_ide_projects)<>1 then raise exception 'Student isolation failed'; end if; end $$;
+select set_config('request.jwt.claims',json_build_object('sub',(select id from apu_review_fixture where label='admin'),'role','authenticated')::text,true);
+do $$ begin if (select count(*) from public.cs_ide_projects)<2 then raise exception 'Admin review failed'; end if; end $$;
+rollback;
+select 'teacher scope, unrelated teacher isolation, student isolation, read-only teacher access, admin review: passed; fixtures rolled back' as result;

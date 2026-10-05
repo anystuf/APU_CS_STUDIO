@@ -9,6 +9,8 @@ import { LoginPage } from './pages/LoginPage'
 import { TeacherCoursesPage } from './pages/TeacherCoursesPage'
 import { TeacherCoursePage } from './pages/TeacherCoursePage'
 import { TeacherSubmissionsPage } from './pages/TeacherSubmissionsPage'
+import { UnauthorizedPage } from './pages/UnauthorizedPage'
+const StudentWorkspacesPage = lazy(() => import('./pages/StudentWorkspacesPage').then(module => ({ default: module.StudentWorkspacesPage })))
 
 const StudentCoursePage = lazy(() => import('./pages/StudentLearningPage').then(module => ({ default: module.StudentCoursePage })))
 const PythonActivityPage = lazy(() => import('./pages/StudentLearningPage').then(module => ({ default: module.PythonActivityPage })))
@@ -33,12 +35,13 @@ function ClassroomRoutes() {
       <Route path="assessments/:assessmentId" element={<AssessmentWorkspacePage/>}/>
       <Route element={<ProtectedRoute roles={['student']}/>}><Route path="student" element={<StudentDashboard/>}/><Route path="student/course/:courseId" element={<StudentCoursePage/>}/><Route path="student/activity/:activityId" element={<PythonActivityPage/>}/></Route>
       <Route element={<ProtectedRoute roles={['teacher','admin']}/>}>
+        <Route path="teacher/workspaces" element={<StudentWorkspacesPage/>}/>
         <Route path="assessments/new" element={<AssessmentBuilderPage/>}/>
         <Route path="assessments/:assessmentId/edit" element={<AssessmentBuilderPage/>}/>
         <Route path="assessments/:assessmentId/review" element={<AssessmentReviewPage/>}/>
         <Route path="teacher" element={<TeacherDashboard/>}/><Route path="teacher/courses" element={<TeacherCoursesPage/>}/><Route path="teacher/course/:courseId" element={<TeacherCoursePage/>}/><Route path="teacher/submissions" element={<TeacherSubmissionsPage/>}/>
       </Route>
     </Route></Route>
-    <Route path="/unauthorized" element={<Placeholder title="You don’t have access to this page"/>}/><Route path="*" element={<Placeholder title="Page not found"/>}/>
+    <Route path="/unauthorized" element={<UnauthorizedPage/>}/><Route path="*" element={<Placeholder title="Page not found"/>}/>
   </Routes>
 }

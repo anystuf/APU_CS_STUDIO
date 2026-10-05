@@ -193,6 +193,6 @@ function Workspace({ userId }: { userId: string }) {
       {stderr && <div className="stderr"><strong>Errors / execution status</strong><pre>{stderr}</pre></div>}
       <label className="console-input"><span>Program input · one value per input() call</span><textarea maxLength={50000} value={draft.input} onChange={event => edit({ input: event.target.value })} placeholder="Enter one value per line"/></label>
     </section></div></div>
-    <div className="workspace-help"><p>First run downloads Python. Runs stop after 30 seconds; packages requiring native system access are not supported. Your workspace is private—saving here is not submitting an assignment.</p><Link className="text-link" to="/assessments">Open Quiz & Code to submit assigned work →</Link></div>
+    <div className="workspace-help"><p>First run downloads Python. Runs stop after 30 seconds; packages requiring native system access are not supported. Your course teachers and platform administrators can review cloud-saved files. Saving here is not submitting an assignment.</p><Link className="text-link" to="/assessments">Open Quiz & Code to submit assigned work →</Link></div>
   </main>
 }

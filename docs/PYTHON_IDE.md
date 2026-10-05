@@ -2,7 +2,7 @@
 
 The Python IDE uses CodeMirror and Pyodide in a dedicated Web Worker, not a third-party iframe. Each account has one personal workspace with up to 20 flat Python modules. Select a file and Run it; sibling imports work. Each run rebuilds the virtual workspace and removes cached workspace modules. This is not a server sandbox or a Colab notebook.
 
-- **Save to cloud** stores all files, selected file and stdin in `cs_ide_projects`. RLS allows only the account owner to read or write. Revision-checked saves reject stale edits from another device.
+- **Save to cloud** stores all files, selected file and stdin in `cs_ide_projects`. RLS allows only the owner to write. Course teachers can read enrolled students’ workspaces, and platform administrators can read all workspaces, through **Student workspaces** at `/teacher/workspaces`. Review is read-only; other students and unrelated teachers have no access. Revision-checked saves reject stale edits from another device.
 - Local drafts are stored under the Supabase user UUID, including their original cloud revision. Unsaved drafts are restored rather than overwritten by cloud loading. A browser-close warning protects edits; save to cloud for cross-device access.
 - **Load cloud version** explicitly replaces an unsaved draft only after confirmation. Download a backup first to resolve cross-device conflicts.
 - **Import .py / backup** imports Python files without silently overwriting duplicate names, or restores one exported JSON backup. Backup restore is a local edit, not an immediate cloud write.
