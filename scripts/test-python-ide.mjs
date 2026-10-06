@@ -38,10 +38,15 @@ try {
   console.log(browser(['eval', '--stdin'], `(async()=>{
     document.querySelector('.workspace-status button').click();
     for(let i=0;i<50;i++){await new Promise(r=>setTimeout(r,100));if(document.querySelector('.workspace-status')?.textContent.includes('Cloud saved'))break;}
-    const run=[...document.querySelectorAll('button')].find(b=>b.textContent==='Run main.py');run.click();
+    const run=document.querySelector('.dock-run');run.click();
     for(let i=0;i<150;i++){await new Promise(r=>setTimeout(r,100));if(document.querySelector('.run-state')?.textContent.includes('Finished'))break;}
     return {uiRunOutput:document.querySelector('.stdout')?.textContent,files:document.querySelector('.workspace-files h2')?.textContent};
   })()`))
+  console.log(browser(['screenshot']))
+  browser(['set', 'viewport', '960', '480'])
+  console.log(browser(['eval', '--stdin'], `JSON.stringify({runVisible:document.querySelector('.dock-run').getBoundingClientRect().bottom<innerHeight,noHorizontalOverflow:document.documentElement.scrollWidth<=innerWidth,editorHeight:document.querySelector('.editor-pane').getBoundingClientRect().height})`))
+  console.log(browser(['screenshot']))
+  console.log(browser(['eval', '--stdin'], `document.querySelector('.dock-tabs button:last-child').click(); 'Output selected'`))
   console.log(browser(['screenshot']))
 } finally {
   await auth.deleteUser(uid)

@@ -1,13 +1,14 @@
-import { useEffect, useRef, useState, type ChangeEvent } from 'react'
+import { useEffect, useRef, useState, type ChangeEvent, type CSSProperties } from 'react'
 import CodeMirror from '@uiw/react-codemirror'
 import { python } from '@codemirror/lang-python'
-import { Download, FileCode2, Play, Plus, Save, Square, Terminal, Upload } from 'lucide-react'
+import { Download, FileCode2, PanelLeft, Play, Plus, Save, Square, Terminal, Upload } from 'lucide-react'
 import { Link } from 'react-router-dom'
 import { useAuth } from '../features/auth/AuthProvider'
 import { supabase } from '../lib/supabase/client'
 import { runPython, stopPython } from '../lib/pyodide/runner'
 import { initialFiles, readDraft, validateFiles, type IdeDraft } from '../utils/ide'
 import '../python-ide.css'
+import '../python-projector.css'
 
 export function PythonWorkspacePage() {
   const { session } = useAuth()
@@ -31,6 +32,9 @@ function Workspace({ userId }: { userId: string }) {
   const [stdout, setStdout] = useState('')
   const [stderr, setStderr] = useState('')
   const [runState, setRunState] = useState('Ready to run')
+  const [sidebarOpen, setSidebarOpen] = useState(false)
+  const [panel, setPanel] = useState<'code' | 'output'>('code')
+  const [fontSize, setFontSize] = useState(18)
   const uploadRef = useRef<HTMLInputElement>(null)
   const active = draft.files.find(file => file.name === draft.activeFile) ?? draft.files[0]!
 
@@ -156,15 +160,14 @@ function Workspace({ userId }: { userId: string }) {
     setTimeout(() => URL.revokeObjectURL(url), 1000)
   }
 
-  return <main className="lab-page workspace-page">
-    <div className="lab-heading"><div><p className="eyebrow">YOUR PYTHON WORKSPACE</p><h1>Python IDE</h1><p>Write, run, and keep your Python files in one place. Imports between your files are supported.</p></div>
+  return <main className={`lab-page workspace-page ${sidebarOpen ? 'sidebar-open' : ''}`} style={{ '--code-font-size': `${fontSize}px` } as CSSProperties}>
+    <div className="lab-heading"><div><h1>Python IDE</h1></div>
       <div className="heading-actions"><button className="button secondary" disabled={loading || saving} onClick={() => void save()}><Save size={17}/>{saving ? 'Saving…' : 'Save to cloud'}</button>
-        {running ? <button className="button danger" onClick={stopPython}><Square size={17}/>Stop</button> : <button className="button" disabled={loading} onClick={() => void run()}><Play size={17}/>Run {active.name}</button>}
       </div>
     </div>
     <div className="workspace-status"><span>{loading ? 'Loading cloud workspace…' : draft.dirty ? 'Local draft · not yet saved to cloud' : cloudTime ? `Cloud saved · ${new Date(cloudTime).toLocaleString()}` : 'New workspace · save to cloud to sync'}</span><button disabled={loading || saving || running} onClick={() => void reloadCloud()}>Load cloud version</button></div>
     {message && <p className="status" role="status">{message}</p>}
-    <div className="workspace-grid"><aside className="workspace-files" aria-label="Python files">
+    <div className="workspace-grid"><aside id="python-files" className="workspace-files" aria-label="Python files" hidden={!sidebarOpen}>
       <h2><FileCode2 size={18}/> Files <small>{draft.files.length}/20</small></h2>
       {draft.files.map(file => <button key={file.name} className={file.name === active.name ? 'selected' : ''} aria-pressed={file.name === active.name} disabled={loading || running} onClick={() => edit({ activeFile: file.name })}><FileCode2 size={15}/>{file.name}</button>)}
       <label className="field"><span>New filename</span><input value={newName} disabled={loading || running} onChange={event => setNewName(event.target.value)} placeholder="helpers.py"/></label>
@@ -185,9 +188,19 @@ function Workspace({ userId }: { userId: string }) {
         edit({ files, activeFile: 'legacy_draft.py' }); setMessage('Imported the old browser draft. Save to cloud when ready.')
       }}>Import old browser draft</button>
       <p>Run the selected file. For example: <code>from helpers import greet</code>.</p>
-    </aside><div className="ide workspace-ide"><section className="editor-pane"><header><FileCode2 size={17}/>{active.name}<span>Python 3 · {active.code.split('\n').length} lines</span></header>
-      <CodeMirror key={active.name} value={active.code} height="520px" extensions={[python()]} theme="dark" editable={!loading} basicSetup={{ lineNumbers: true, foldGutter: true }} onChange={code => edit({ files: draft.files.map(file => file.name === active.name ? { ...file, code } : file) })}/>
-    </section><section className="console-pane"><header><Terminal size={17}/>Output<button disabled={running} onClick={() => { setStdout(''); setStderr(''); setRunState('Ready to run') }}>Clear</button></header>
+    </aside><div className={`ide workspace-ide show-${panel}`}>
+      <div className="code-dock">
+        <button aria-label="Toggle files sidebar" aria-expanded={sidebarOpen} aria-controls="python-files" onClick={() => setSidebarOpen(open => !open)}><PanelLeft size={18}/></button>
+        <div className="dock-tabs" aria-label="Workspace panels">
+          <button aria-pressed={panel === 'code'} onClick={() => setPanel('code')}><FileCode2 size={16}/><span>{active.name}</span></button>
+          <button aria-pressed={panel === 'output'} onClick={() => setPanel('output')}><Terminal size={16}/>Output</button>
+        </div>
+        <div className="font-controls"><button aria-label="Decrease code font size" disabled={fontSize <= 12} onClick={() => setFontSize(size => size - 2)}>A−</button><span>{fontSize}</span><button aria-label="Increase code font size" disabled={fontSize >= 36} onClick={() => setFontSize(size => size + 2)}>A+</button></div>
+        {running ? <button className="dock-run danger" onClick={stopPython}><Square size={17}/>Stop</button> : <button className="dock-run" disabled={loading} aria-label={`Run ${active.name}`} onClick={() => void run()}><Play size={17}/>Run</button>}
+      </div>
+      <section className="editor-pane" aria-label="Python code editor">
+      <CodeMirror key={active.name} value={active.code} height="100%" extensions={[python()]} theme="dark" editable={!loading} basicSetup={{ lineNumbers: true, foldGutter: true }} onChange={code => edit({ files: draft.files.map(file => file.name === active.name ? { ...file, code } : file) })}/>
+    </section><section className="console-pane" aria-label="Python output"><header><Terminal size={17}/>Output<button disabled={running} onClick={() => { setStdout(''); setStderr(''); setRunState('Ready to run') }}>Clear</button></header>
       <p className="run-state" role="status">{runState}</p>
       <pre className="stdout">{stdout || (running ? 'Loading Python or executing code…' : 'No output yet. Use print() to display a result.')}</pre>
       {stderr && <div className="stderr"><strong>Errors / execution status</strong><pre>{stderr}</pre></div>}

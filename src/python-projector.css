@@ -1,0 +1,52 @@
+.ide-app-shell .topbar { min-height: 44px; padding: 6px 16px; gap: 12px; flex-wrap: nowrap; }
+.ide-app-shell .brand { font-size: 18px; margin-right: auto; }
+.ide-app-shell .topbar .icon-button { font-size: 12px; white-space: nowrap; }
+.ide-app-shell .topbar nav { display: none; }
+.ide-app-shell .topbar nav.menu-open { display: flex; position: absolute; right: 12px; top: 100%; flex-direction: column; background: white; padding: 16px; border: 1px solid #ccd8d2; box-shadow: 0 8px 24px #0002; z-index: 30; }
+.workspace-page { width: calc(100% - 24px); margin: 10px auto 20px; }
+.workspace-page .lab-heading { align-items: center; gap: 8px; }
+.workspace-page .lab-heading h1 { font-size: 20px; margin: 0; }
+.workspace-page .heading-actions .button { padding: 8px 12px; font-size: 12px; }
+.workspace-page .workspace-status { margin: 6px 0; font-size: 11px; flex-direction: row; gap: 8px; }
+.workspace-page .workspace-status button { padding: 4px 8px; font-size: 11px; }
+.workspace-page > .status { margin: 6px 0; padding: 6px 10px; font-size: 12px; }
+.workspace-page .workspace-grid { grid-template-columns: minmax(0, 1fr); gap: 8px; }
+.workspace-page.sidebar-open .workspace-grid { grid-template-columns: 190px minmax(0, 1fr); }
+.workspace-page .workspace-files[hidden] { display: none; }
+.workspace-page .workspace-files { max-height: calc(100dvh - 145px); overflow: auto; padding: 12px; font-size: 12px; }
+.workspace-page .workspace-files h2 { font-size: 15px; }
+.workspace-page .workspace-files button, .workspace-page .workspace-files input { font-size: 12px; padding: 8px; }
+.workspace-page .workspace-ide { grid-template-columns: minmax(0, 1.3fr) minmax(0, 1fr); grid-template-rows: auto minmax(0, 1fr); border-radius: 6px; height: max(260px, calc(100dvh - 155px)); overflow: hidden; }
+.code-dock { grid-column: 1 / -1; display: flex; align-items: center; gap: 6px; padding: 6px 8px; background: #252b35; border-bottom: 1px solid #424957; min-width: 0; }
+.code-dock button { display: inline-flex; gap: 6px; align-items: center; justify-content: center; background: transparent; color: #dce5ef; border: 1px solid #4e5768; border-radius: 4px; padding: 7px 9px; cursor: pointer; font-size: 13px; white-space: nowrap; }
+.dock-tabs { display: flex; min-width: 0; }
+.dock-tabs button { border-radius: 0; }
+.dock-tabs button span { max-width: 160px; overflow: hidden; text-overflow: ellipsis; }
+.dock-tabs button[aria-pressed=true] { background: #176b52; color: white; }
+.font-controls { margin-left: auto; display: flex; align-items: center; gap: 4px; color: #c4cfdb; font-size: 11px; }
+.code-dock .dock-run { background: #176b52; color: white; border-color: #2c9877; font-weight: 700; }
+.code-dock .dock-run.danger { background: #a23535; }
+.workspace-ide .editor-pane, .workspace-ide .console-pane { min-height: 0; min-width: 0; overflow: auto; }
+.workspace-ide .editor-pane > div { height: 100%; }
+.workspace-ide .cm-editor { font-size: var(--code-font-size); }
+.workspace-ide .cm-scroller { overflow: auto; }
+.workspace-ide .console-pane header { height: 36px; flex-shrink: 0; font-size: 12px; }
+.workspace-ide .console-pane .stdout { font-size: var(--code-font-size); min-height: 80px; max-height: none; }
+.workspace-ide .console-pane .stderr pre { font-size: var(--code-font-size); min-height: 0; }
+.workspace-ide .console-input { flex-shrink: 0; padding: 10px; }
+.workspace-ide .console-input textarea { min-height: 45px; font-size: var(--code-font-size); }
+.workspace-page .workspace-help { margin-top: 8px; font-size: 11px; }
+.workspace-page .workspace-help p { margin: 0 0 4px; }
+@media (max-width: 1100px) {
+  .workspace-page .workspace-ide { grid-template-columns: minmax(0, 1fr); }
+  .workspace-ide.show-code .console-pane, .workspace-ide.show-output .editor-pane { display: none; }
+  .workspace-ide .editor-pane { border-right: 0; }
+}
+@media (max-width: 650px) {
+  .workspace-page.sidebar-open .workspace-grid { grid-template-columns: minmax(0, 1fr); }
+  .workspace-page .workspace-files { max-height: 220px; grid-template-columns: 1fr; }
+  .code-dock { gap: 4px; padding: 5px; flex-wrap: wrap; }
+  .code-dock button { padding: 7px; font-size: 12px; }
+  .dock-tabs button span { max-width: 100px; }
+  .font-controls span { display: none; }
+}

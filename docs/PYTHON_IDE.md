@@ -1,5 +1,7 @@
 # Python workspace
 
+The compact teaching layout keeps Run/Stop in the code dock. Toggle the files sidebar with the left dock button; use A−/A+ to enlarge code and output (12–36 px) without zooming the whole page. At narrower widths, including a 200%-zoom equivalent viewport, main.py and Output buttons switch panels. Classroom opens platform navigation; Save to cloud remains above the dock.
+
 The Python IDE uses CodeMirror and Pyodide in a dedicated Web Worker, not a third-party iframe. Each account has one personal workspace with up to 20 flat Python modules. Select a file and Run it; sibling imports work. Each run rebuilds the virtual workspace and removes cached workspace modules. This is not a server sandbox or a Colab notebook.
 
 - **Save to cloud** stores all files, selected file and stdin in `cs_ide_projects`. RLS allows only the owner to write. Course teachers can read enrolled students’ workspaces, and platform administrators can read all workspaces, through **Student workspaces** at `/teacher/workspaces`. Review is read-only; other students and unrelated teachers have no access. Revision-checked saves reject stale edits from another device.
