@@ -32,7 +32,7 @@ function Workspace({ userId }: { userId: string }) {
   const [stdout, setStdout] = useState('')
   const [stderr, setStderr] = useState('')
   const [runState, setRunState] = useState('Ready to run')
-  const [sidebarOpen, setSidebarOpen] = useState(false)
+  const [sidebarOpen, setSidebarOpen] = useState(() => window.innerWidth > 1100)
   const [panel, setPanel] = useState<'code' | 'output'>('code')
   const [fontSize, setFontSize] = useState(18)
   const uploadRef = useRef<HTMLInputElement>(null)
@@ -190,7 +190,7 @@ function Workspace({ userId }: { userId: string }) {
       <p>Run the selected file. For example: <code>from helpers import greet</code>.</p>
     </aside><div className={`ide workspace-ide show-${panel}`}>
       <div className="code-dock">
-        <button aria-label="Toggle files sidebar" aria-expanded={sidebarOpen} aria-controls="python-files" onClick={() => setSidebarOpen(open => !open)}><PanelLeft size={18}/></button>
+        <button aria-label="Toggle files sidebar" aria-expanded={sidebarOpen} aria-controls="python-files" onClick={() => setSidebarOpen(open => !open)}><PanelLeft size={18}/>Files</button>
         <div className="dock-tabs" aria-label="Workspace panels">
           <button aria-pressed={panel === 'code'} onClick={() => setPanel('code')}><FileCode2 size={16}/><span>{active.name}</span></button>
           <button aria-pressed={panel === 'output'} onClick={() => setPanel('output')}><Terminal size={16}/>Output</button>
@@ -202,9 +202,11 @@ function Workspace({ userId }: { userId: string }) {
       <CodeMirror key={active.name} value={active.code} height="100%" extensions={[python()]} theme="dark" editable={!loading} basicSetup={{ lineNumbers: true, foldGutter: true }} onChange={code => edit({ files: draft.files.map(file => file.name === active.name ? { ...file, code } : file) })}/>
     </section><section className="console-pane" aria-label="Python output"><header><Terminal size={17}/>Output<button disabled={running} onClick={() => { setStdout(''); setStderr(''); setRunState('Ready to run') }}>Clear</button></header>
       <p className="run-state" role="status">{runState}</p>
-      <pre className="stdout">{stdout || (running ? 'Loading Python or executing code…' : 'No output yet. Use print() to display a result.')}</pre>
+      <div className="console-results" tabIndex={0} aria-label="Execution results">
+      <pre className="stdout">{stdout || (running ? 'Loading Python or executing code…' : stderr ? '' : 'No output yet. Use print() to display a result.')}</pre>
       {stderr && <div className="stderr"><strong>Errors / execution status</strong><pre>{stderr}</pre></div>}
-      <label className="console-input"><span>Program input · one value per input() call</span><textarea maxLength={50000} value={draft.input} onChange={event => edit({ input: event.target.value })} placeholder="Enter one value per line"/></label>
+      </div>
+      <details className="input-drawer"><summary>Program input · {draft.input.split('\n').length} line(s) · edit</summary><label className="console-input"><span>One value per input() call</span><textarea maxLength={50000} value={draft.input} onChange={event => edit({ input: event.target.value })} placeholder="Enter one value per line"/></label></details>
     </section></div></div>
     <div className="workspace-help"><p>First run downloads Python. Runs stop after 30 seconds; packages requiring native system access are not supported. Your course teachers and platform administrators can review cloud-saved files. Saving here is not submitting an assignment.</p><Link className="text-link" to="/assessments">Open Quiz & Code to submit assigned work →</Link></div>
   </main>

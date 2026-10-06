@@ -1,8 +1,8 @@
 .ide-app-shell .topbar { min-height: 44px; padding: 6px 16px; gap: 12px; flex-wrap: nowrap; }
 .ide-app-shell .brand { font-size: 18px; margin-right: auto; }
 .ide-app-shell .topbar .icon-button { font-size: 12px; white-space: nowrap; }
-.ide-app-shell .topbar nav { display: none; }
-.ide-app-shell .topbar nav.menu-open { display: flex; position: absolute; right: 12px; top: 100%; flex-direction: column; background: white; padding: 16px; border: 1px solid #ccd8d2; box-shadow: 0 8px 24px #0002; z-index: 30; }
+.ide-app-shell .topbar nav { display: flex; gap: 16px; font-size: 13px; }
+.ide-app-shell .topbar > button[aria-controls] { display: none; }
 .workspace-page { width: calc(100% - 24px); margin: 10px auto 20px; }
 .workspace-page .lab-heading { align-items: center; gap: 8px; }
 .workspace-page .lab-heading h1 { font-size: 20px; margin: 0; }
@@ -26,18 +26,26 @@
 .font-controls { margin-left: auto; display: flex; align-items: center; gap: 4px; color: #c4cfdb; font-size: 11px; }
 .code-dock .dock-run { background: #176b52; color: white; border-color: #2c9877; font-weight: 700; }
 .code-dock .dock-run.danger { background: #a23535; }
-.workspace-ide .editor-pane, .workspace-ide .console-pane { min-height: 0; min-width: 0; overflow: auto; }
+.workspace-ide .editor-pane, .workspace-ide .console-pane { min-height: 0; min-width: 0; overflow: hidden; }
 .workspace-ide .editor-pane > div { height: 100%; }
 .workspace-ide .cm-editor { font-size: var(--code-font-size); }
 .workspace-ide .cm-scroller { overflow: auto; }
 .workspace-ide .console-pane header { height: 36px; flex-shrink: 0; font-size: 12px; }
-.workspace-ide .console-pane .stdout { font-size: var(--code-font-size); min-height: 80px; max-height: none; }
-.workspace-ide .console-pane .stderr pre { font-size: var(--code-font-size); min-height: 0; }
+.workspace-ide .console-results { flex: 1; min-height: 0; overflow: auto; }
+.workspace-ide .console-results .stdout, .workspace-ide .console-results .stderr pre { font-size: var(--code-font-size); min-height: 0; max-height: none; overflow: visible; flex: none; overflow-wrap: anywhere; white-space: pre-wrap; }
+.workspace-ide .console-results .stdout:empty { display: none; }
+.workspace-ide .console-results .stderr { max-height: none; overflow: visible; }
+.input-drawer { flex-shrink: 0; border-top: 1px solid #424957; }
+.input-drawer summary { cursor: pointer; padding: 10px; color: #bfd0dd; font-size: 12px; }
+.input-drawer .console-input textarea { height: 70px; max-height: 110px; }
 .workspace-ide .console-input { flex-shrink: 0; padding: 10px; }
 .workspace-ide .console-input textarea { min-height: 45px; font-size: var(--code-font-size); }
 .workspace-page .workspace-help { margin-top: 8px; font-size: 11px; }
 .workspace-page .workspace-help p { margin: 0 0 4px; }
 @media (max-width: 1100px) {
+  .ide-app-shell .topbar nav { display: none; }
+  .ide-app-shell .topbar > button[aria-controls] { display: inline-flex; }
+  .ide-app-shell .topbar nav.menu-open { display: flex; position: absolute; right: 12px; top: 100%; flex-direction: column; background: white; padding: 16px; border: 1px solid #ccd8d2; box-shadow: 0 8px 24px #0002; z-index: 30; }
   .workspace-page .workspace-ide { grid-template-columns: minmax(0, 1fr); }
   .workspace-ide.show-code .console-pane, .workspace-ide.show-output .editor-pane { display: none; }
   .workspace-ide .editor-pane { border-right: 0; }
