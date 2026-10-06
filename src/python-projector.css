@@ -16,7 +16,7 @@
 .workspace-page .workspace-files { max-height: calc(100dvh - 145px); overflow: auto; padding: 12px; font-size: 12px; }
 .workspace-page .workspace-files h2 { font-size: 15px; }
 .workspace-page .workspace-files button, .workspace-page .workspace-files input { font-size: 12px; padding: 8px; }
-.workspace-page .workspace-ide { grid-template-columns: minmax(0, 1.3fr) minmax(0, 1fr); grid-template-rows: auto minmax(0, 1fr); border-radius: 6px; height: max(260px, calc(100dvh - 155px)); overflow: hidden; }
+.workspace-page .workspace-ide { grid-template-columns: minmax(0, 1.3fr) minmax(0, 1fr); grid-template-rows: auto minmax(0, 1fr); border-radius: 6px; height: max(220px, calc(100dvh - 210px)); overflow: hidden; }
 .code-dock { grid-column: 1 / -1; display: flex; align-items: center; gap: 6px; padding: 6px 8px; background: #252b35; border-bottom: 1px solid #424957; min-width: 0; }
 .code-dock button { display: inline-flex; gap: 6px; align-items: center; justify-content: center; background: transparent; color: #dce5ef; border: 1px solid #4e5768; border-radius: 4px; padding: 7px 9px; cursor: pointer; font-size: 13px; white-space: nowrap; }
 .dock-tabs { display: flex; min-width: 0; }
