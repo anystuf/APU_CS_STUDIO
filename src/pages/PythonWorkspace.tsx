@@ -35,6 +35,9 @@ function Workspace({ userId }: { userId: string }) {
   const [sidebarOpen, setSidebarOpen] = useState(() => window.innerWidth > 1100)
   const [panel, setPanel] = useState<'code' | 'output'>('code')
   const [fontSize, setFontSize] = useState(18)
+  const [waitingInput, setWaitingInput] = useState(false)
+  const [terminalValue, setTerminalValue] = useState('')
+  const inputResolver = useRef<((value: string) => void) | null>(null)
   const uploadRef = useRef<HTMLInputElement>(null)
   const active = draft.files.find(file => file.name === draft.activeFile) ?? draft.files[0]!
 
@@ -106,10 +109,15 @@ function Workspace({ userId }: { userId: string }) {
     setStdout(''); setStderr(''); setRunState(`Running ${snapshot.activeFile}…`)
     const start = performance.now()
     try {
-      const result = await runPython(active.code, snapshot.input, snapshot.files, snapshot.activeFile)
+      const result = await runPython(active.code, '', snapshot.files, snapshot.activeFile, {
+        onOutput: setStdout,
+        onInput: () => new Promise(resolve => {
+          inputResolver.current = resolve; setWaitingInput(true); setTerminalValue(''); setPanel('output'); setRunState('Waiting for input · type in Output and press Enter')
+        }),
+      })
       setStdout(result.stdout); setStderr(result.stderr)
       setRunState(`${result.stderr ? 'Finished with errors or stopped' : 'Finished'} · ${((performance.now() - start) / 1000).toFixed(2)}s`)
-    } finally { setRunning(false); runningRef.current = false }
+    } finally { setRunning(false); runningRef.current = false; setWaitingInput(false); inputResolver.current = null }
   }
   const addFile = () => {
     const name = newName.trim()
@@ -205,8 +213,8 @@ function Workspace({ userId }: { userId: string }) {
       <div className="console-results" tabIndex={0} aria-label="Execution results">
       <pre className="stdout">{stdout || (running ? 'Loading Python or executing code…' : stderr ? '' : 'No output yet. Use print() to display a result.')}</pre>
       {stderr && <div className="stderr"><strong>Errors / execution status</strong><pre>{stderr}</pre></div>}
+      {waitingInput && <form className="terminal-entry" onSubmit={event => { event.preventDefault(); inputResolver.current?.(terminalValue); inputResolver.current = null; setWaitingInput(false); setRunState('Running…') }}><span aria-hidden="true">›</span><input autoFocus aria-label="Terminal input" value={terminalValue} onChange={event => setTerminalValue(event.target.value)} autoComplete="off" spellCheck={false}/><button type="submit">Enter</button></form>}
       </div>
-      <details className="input-drawer"><summary>Program input · {draft.input.split('\n').length} line(s) · edit</summary><label className="console-input"><span>One value per input() call</span><textarea maxLength={50000} value={draft.input} onChange={event => edit({ input: event.target.value })} placeholder="Enter one value per line"/></label></details>
     </section></div></div>
     <div className="workspace-help"><p>First run downloads Python. Runs stop after 30 seconds; packages requiring native system access are not supported. Your course teachers and platform administrators can review cloud-saved files. Saving here is not submitting an assignment.</p><Link className="text-link" to="/assessments">Open Quiz & Code to submit assigned work →</Link></div>
   </main>

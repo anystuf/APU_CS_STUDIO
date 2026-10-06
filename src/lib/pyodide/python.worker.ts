@@ -7,13 +7,23 @@ type PythonRuntime = {
 const pythonWorker = self as unknown as {
   importScripts: (...urls: string[]) => void
   loadPyodide: (options: { indexURL: string }) => Promise<PythonRuntime>
-  postMessage: (result: { stdout: string; stderr: string }) => void
-  onmessage: ((event: MessageEvent<{ code: string; input: string; files?: { name: string; code: string }[]; filename?: string }>) => void) | null
+  postMessage: (result: { stdout: string; stderr: string } | { type: string; text?: string }) => void
+  requestInput?: (prompt: string) => Promise<string>
+  onmessage: ((event: MessageEvent<{ code: string; input: string; files?: { name: string; code: string }[]; filename?: string; interactive?: boolean; type?: string; value?: string }>) => void) | null
 }
 const pythonIndex = 'https://cdn.jsdelivr.net/pyodide/v0.27.7/full/'
 let pythonRuntime: Promise<PythonRuntime> | null = null
+let resolveInput: ((value: string) => void) | null = null
+let outputSoFar = ''
+pythonWorker.requestInput = prompt => new Promise(resolve => {
+  resolveInput = resolve
+  pythonWorker.postMessage({ type: 'output', text: outputSoFar + (outputSoFar ? '\n' : '') + prompt })
+  pythonWorker.postMessage({ type: 'input' })
+})
 pythonWorker.onmessage = async event => {
+  if (event.data.type === 'input') { resolveInput?.(event.data.value ?? ''); resolveInput = null; return }
   const stdout: string[] = []; const stderr: string[] = []
+  outputSoFar = ''
   try {
     if (!pythonRuntime) {
       pythonWorker.importScripts(`${pythonIndex}pyodide.js`)
@@ -23,7 +33,7 @@ pythonWorker.onmessage = async event => {
     const values = event.data.input.split(/\r?\n/); let cursor = 0
     let captured = 0
     const capture = (list: string[], text: string) => { if (captured < 50000) { const part = text.slice(0, 50000 - captured); list.push(part); captured += part.length } }
-    runtime.setStdout({ batched: text => capture(stdout, text) })
+    runtime.setStdout({ batched: text => { const before = captured; capture(stdout, text); outputSoFar = stdout.join('\n'); if (event.data.interactive && captured !== before) pythonWorker.postMessage({ type: 'output', text: outputSoFar }) } })
     runtime.setStderr({ batched: text => capture(stderr, text) })
     runtime.setStdin({ stdin: () => values[cursor++] ?? null })
     const files = event.data.files ?? [{ name: 'main.py', code: event.data.code }]
@@ -31,7 +41,16 @@ pythonWorker.onmessage = async event => {
     const filename = event.data.filename ?? 'main.py'
     if (!files.some(file => file.name === filename)) throw new Error('Run file does not exist')
     await runtime.runPythonAsync(`
-import os, sys, json, shutil, importlib
+import os, sys, json, shutil, importlib, builtins
+from pyodide.ffi import run_sync
+from js import requestInput
+if not hasattr(builtins, '_apu_original_input'):
+    builtins._apu_original_input = builtins.input
+def _apu_input(prompt=''):
+    value = str(run_sync(requestInput(str(prompt))))
+    print(str(prompt) + value)
+    return value
+builtins.input = _apu_input if ${event.data.interactive ? 'True' : 'False'} else builtins._apu_original_input
 _workspace = '/apu_workspace'
 for _name, _module in list(sys.modules.items()):
     if str(getattr(_module, '__file__', '')).startswith(_workspace + '/'):

@@ -10,7 +10,7 @@ The Python IDE uses CodeMirror and Pyodide in a dedicated Web Worker, not a thir
 - **Import .py / backup** imports Python files without silently overwriting duplicate names, or restores one exported JSON backup. Backup restore is a local edit, not an immediate cloud write.
 - **Download selected .py** exports the active Python file. **Download workspace backup** exports all files and input. **Import old browser draft** copies the previous IDE's local draft into `legacy_draft.py` only on explicit request.
 - **Stop** terminates the Worker and permits another run. A 30-second timeout also terminates runaway code. Displayed output and error text are capped to avoid flooding the UI. Python needs network access to download its runtime on first use.
-- stdout and errors are shown separately. Input is supplied in advance, one value per `input()` call; this is not an interactive terminal.
+- stdout and errors are shown separately. In the personal IDE, `input()` pauses execution: type next to the prompt in Output and press Enter to continue. Repeated inputs and inputs inside functions are supported through Pyodide JSPI (use a current Chrome/Edge browser). Assignment runners retain their pre-supplied test input behavior.
 - Personal cloud saves are not assignment submissions. Use Quiz & Code or an assigned coding activity for teacher review and grading. The existing submission workflows remain unchanged.
 
 Apply `python_ide_projects` migration before deploying the frontend. GitHub Pages workflow builds the correct repository base path.
