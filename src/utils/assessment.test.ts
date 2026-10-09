@@ -1,10 +1,15 @@
 import { describe, expect, it } from 'vitest'
-import { initialAnswers, isAnswered, normalizeSubmission, validateQuestions } from './assessment'
+import { formatDate, initialAnswers, isAnswered, normalizeSubmission, validateQuestions } from './assessment'
 import type { AssessmentQuestion } from '../types/assessment'
 
 const quiz: AssessmentQuestion = { id: 'quiz', kind: 'multiple_choice', prompt: 'What is True?', points: 2, options: ['Boolean', 'String'] }
 const code: AssessmentQuestion = { id: 'code', kind: 'python', prompt: 'Print a name', points: 8, starter_code: '' }
 describe('combined assessment answers', () => {
+  it('uses English validation and due-date labels', () => {
+    expect(validateQuestions([], {})).toBe('Add at least one question.')
+    expect(validateQuestions([quiz], {})).toBe('Question 1: fill in the options and select the correct answer.')
+    expect(formatDate(null)).toBe('No due date')
+  })
   it('accepts the first choice and rejects out-of-range choices', () => {
     expect(isAnswered(quiz, { quiz: { choice: 0 } })).toBe(true)
     expect(isAnswered(quiz, { quiz: { choice: 2 } })).toBe(false)

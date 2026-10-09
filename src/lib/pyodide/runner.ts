@@ -6,7 +6,7 @@ export type PythonInteractive = { onOutput: (text: string) => void; onInput: () 
 export function stopPython() { cancel?.() }
 
 export async function runPython(code: string, input = '', files?: { name: string; code: string }[], filename = 'main.py', interactive?: PythonInteractive): Promise<{ stdout: string; stderr: string }> {
-  if (active) return { stdout: '', stderr: 'Một chương trình khác đang chạy. Vui lòng đợi.' }
+  if (active) return { stdout: '', stderr: 'Another program is running. Please wait.' }
   active = true
   try {
     worker ??= new Worker(new URL('./python.worker.ts', import.meta.url))
@@ -15,7 +15,7 @@ export async function runPython(code: string, input = '', files?: { name: string
       const finish = (result: { stdout: string; stderr: string }) => { clearTimeout(timeout); cancel = null; current.onmessage = null; current.onerror = null; resolve(result) }
       let timeout = window.setTimeout(() => {
         current.terminate(); worker = null
-        finish({ stdout: '', stderr: 'Chương trình dừng sau 30 giây. Kiểm tra vòng lặp hoặc kết nối tải Python, rồi chạy lại.' })
+        finish({ stdout: '', stderr: 'Execution stopped after 30 seconds. Check for an infinite loop or a runtime download issue, then try again.' })
       }, 30000)
       cancel = () => {
         current.terminate(); worker = null
@@ -34,7 +34,7 @@ export async function runPython(code: string, input = '', files?: { name: string
         }
         finish(event.data)
       }
-      current.onerror = () => { current.terminate(); worker = null; finish({ stdout: '', stderr: 'Không tải được Python. Kiểm tra kết nối mạng rồi chạy lại.' }) }
+      current.onerror = () => { current.terminate(); worker = null; finish({ stdout: '', stderr: 'Could not load Python. Check your internet connection and try again.' }) }
       current.postMessage({ code, input, files, filename, interactive: !!interactive })
     })
   } catch (error) { return { stdout: '', stderr: error instanceof Error ? error.message : String(error) } }

@@ -17,15 +17,15 @@ export function initialAnswers(questions: AssessmentQuestion[]): AssessmentAnswe
 }
 
 export function validateQuestions(questions: AssessmentQuestion[], keys: Record<string, number>) {
-  if (!questions.length) return 'Thêm ít nhất một câu hỏi.'
+  if (!questions.length) return 'Add at least one question.'
   for (const [index, q] of questions.entries()) {
-    if (!q.prompt.trim()) return `Câu ${index + 1}: nhập nội dung câu hỏi.`
-    if (!Number.isInteger(q.points) || q.points < 1 || q.points > 100) return `Câu ${index + 1}: điểm phải là số nguyên từ 1 đến 100.`
-    if (q.kind === 'multiple_choice' && (!q.options || q.options.length < 2 || q.options.some(o => !o.trim()) || !Number.isInteger(keys[q.id]) || keys[q.id]! < 0 || keys[q.id]! >= q.options.length)) return `Câu ${index + 1}: điền các lựa chọn và chọn đáp án đúng.`
+    if (!q.prompt.trim()) return `Question ${index + 1}: enter a question prompt.`
+    if (!Number.isInteger(q.points) || q.points < 1 || q.points > 100) return `Question ${index + 1}: points must be an integer from 1 to 100.`
+    if (q.kind === 'multiple_choice' && (!q.options || q.options.length < 2 || q.options.some(o => !o.trim()) || !Number.isInteger(keys[q.id]) || keys[q.id]! < 0 || keys[q.id]! >= q.options.length)) return `Question ${index + 1}: fill in the options and select the correct answer.`
   }
   return null
 }
 
 export function formatDate(value: string | null) {
-  return value ? new Date(value).toLocaleString('vi-VN') : 'Không giới hạn thời gian'
+  return value ? new Date(value).toLocaleString('en-GB') : 'No due date'
 }

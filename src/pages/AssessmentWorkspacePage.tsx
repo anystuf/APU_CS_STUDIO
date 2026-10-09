@@ -24,7 +24,7 @@ function AssessmentWorkspace({ assessmentId }: { assessmentId: string }) {
   const [answers, setAnswers] = useState<AssessmentAnswers>({})
   const [loading, setLoading] = useState(true)
   const [error, setError] = useState('')
-  const [saveState, setSaveState] = useState('Chưa có thay đổi')
+  const [saveState, setSaveState] = useState('No changes yet')
   const [busy, setBusy] = useState(false)
   const [confirming, setConfirming] = useState(false)
   const [now, setNow] = useState(Date.now())
@@ -47,17 +47,17 @@ function AssessmentWorkspace({ assessmentId }: { assessmentId: string }) {
         staff ? Promise.resolve({ data: null, error: null }) : supabase.from('cs_assessment_submissions').select('*,cs_assessment_reviews(*)').eq('assessment_id', assessmentId!).eq('student_id', userId).maybeSingle(),
       ])
       if (cancelled) return
-      if (a.error || s.error) { setError(a.error?.message ?? s.error?.message ?? 'Không tải được đề.'); setLoading(false); return }
+      if (a.error || s.error) { setError(a.error?.message ?? s.error?.message ?? 'Could not load the assessment.'); setLoading(false); return }
       const item = a.data as Assessment; const saved = s.data ? normalizeSubmission(s.data) : null
       let restored = saved?.answers ?? initialAnswers(item.questions)
       if (!staff && saved?.status !== 'submitted') {
         try {
           const local = JSON.parse(localStorage.getItem(storageKey) ?? 'null') as CachedWork | null
-          if (local?.answers && (!saved || new Date(local.updated_at) > new Date(saved.updated_at))) { restored = local.answers; dirty.current = true; setSaveState('Đã khôi phục bản nháp trên máy này; đang đồng bộ…') }
+          if (local?.answers && (!saved || new Date(local.updated_at) > new Date(saved.updated_at))) { restored = local.answers; dirty.current = true; setSaveState('Local draft restored; syncing…') }
         } catch { /* Local storage does not block cloud work. */ }
       }
       setAssessment(item); setSubmission(saved); latest.current = restored; setAnswers(restored)
-      if (saved && !dirty.current) setSaveState(saved.status === 'submitted' ? 'Bài đã nộp và lưu trên hệ thống' : `Đã lưu trên hệ thống lúc ${formatDate(saved.updated_at)}`)
+      if (saved && !dirty.current) setSaveState(saved.status === 'submitted' ? 'Submission saved to the cloud' : `Saved to the cloud at ${formatDate(saved.updated_at)}`)
       setLoading(false)
     })()
     return () => { cancelled = true }
@@ -71,7 +71,7 @@ function AssessmentWorkspace({ assessmentId }: { assessmentId: string }) {
     if (JSON.stringify(latest.current) === JSON.stringify(snapshot)) {
       dirty.current = false
       try { localStorage.removeItem(storageKey) } catch { /* Cloud save is confirmed. */ }
-      setSaveState(status === 'submitted' ? 'Bài đã nộp và lưu trên hệ thống' : `Đã lưu trên hệ thống lúc ${formatDate(saved.updated_at)}`)
+      setSaveState(status === 'submitted' ? 'Submission saved to the cloud' : `Saved to the cloud at ${formatDate(saved.updated_at)}`)
     }
     return saved
   }, [assessmentId, userId, storageKey])
@@ -79,9 +79,9 @@ function AssessmentWorkspace({ assessmentId }: { assessmentId: string }) {
   const saveDraft = useCallback(() => {
     if (staff || finalizing.current || !dirty.current || closed || done) return
     const snapshot = structuredClone(latest.current)
-    setSaveState('Đang lưu trên hệ thống…')
+    setSaveState('Saving to the cloud…')
     queue.current = queue.current.catch(() => undefined).then(() => persist(snapshot, 'draft')).catch(error => {
-      setSaveState(`Chưa đồng bộ: ${error.message}. Bản nháp vẫn giữ trên máy này; hãy thử lưu lại.`)
+      setSaveState(`Not synced: ${error.message}. Your draft is still saved on this device. Please try saving again.`)
     })
   }, [staff, closed, done, persist])
   useEffect(() => {
@@ -104,8 +104,8 @@ function AssessmentWorkspace({ assessmentId }: { assessmentId: string }) {
     latest.current = next; setAnswers(next)
     if (!staff) {
       dirty.current = true
-      try { localStorage.setItem(storageKey, JSON.stringify({ answers: next, updated_at: new Date().toISOString() })); setSaveState('Đã giữ nháp trên máy; đang chờ đồng bộ…') }
-      catch { setSaveState('Đang chờ lưu trên hệ thống…') }
+      try { localStorage.setItem(storageKey, JSON.stringify({ answers: next, updated_at: new Date().toISOString() })); setSaveState('Draft saved on this device; waiting to sync…') }
+      catch { setSaveState('Waiting to save to the cloud…') }
     }
   }
   const submit = async () => {
@@ -122,23 +122,23 @@ function AssessmentWorkspace({ assessmentId }: { assessmentId: string }) {
         const saved = normalizeSubmission(check.data)
         setSubmission(saved); latest.current = saved.answers; setAnswers(saved.answers); dirty.current = false; setConfirming(false)
         try { localStorage.removeItem(storageKey) } catch { /* Submission is confirmed. */ }
-      } else setError(error instanceof Error ? error.message : 'Nộp bài chưa thành công. Bài làm vẫn được giữ để thử lại.')
+      } else setError(error instanceof Error ? error.message : 'Submission failed. Your work is preserved so you can retry.')
     }
     finally { finalizing.current = false; setBusy(false) }
   }
-  if (loading) return <main className="page" role="status">Đang tải đề và bài làm…</main>
-  if (!assessment) return <main className="page"><Link className="back" to="/assessments">Quay lại Quiz & Code</Link><p className="alert" role="alert">{error || 'Không tìm thấy bài kiểm tra.'}</p></main>
+  if (loading) return <main className="page" role="status">Loading assessment and saved work…</main>
+  if (!assessment) return <main className="page"><Link className="back" to="/assessments">Back to Quiz & Code</Link><p className="alert" role="alert">{error || 'Assessment not found.'}</p></main>
   const questions = done ? submission.question_snapshot : assessment.questions
   const completed = questions.filter(q => isAnswered(q, answers)).length
   const review = submission?.cs_assessment_reviews?.[0]
-  return <main className="lab-page assessment-page"><Link className="back" to="/assessments"><ArrowLeft size={16}/> Quiz & Code</Link><div className="lab-heading"><div><p className="eyebrow">{assessment.cs_courses?.title}</p><h1>{assessment.title}</h1><p className="question-prompt">{assessment.instructions}</p><p className="work-meta">Hạn nộp: {formatDate(assessment.due_at)}</p></div><span className="assessment-badge">{completed}/{questions.length} câu đã làm</span></div>
-    {staff && <p className="status">Chế độ xem trước: có thể thử quiz và Python, bài thử không được lưu hay nộp.</p>}
-    {!staff && closed && !done && <p className="alert">Bài kiểm tra đã đóng hoặc hết hạn. Em vẫn có thể xem bản nháp đã lưu.</p>}
-    {done && <section className="assessment-success" role="status"><CheckCircle2/><div><h2>Đã nộp bài thành công</h2><p>Hệ thống lưu cả câu trả lời và code lúc {formatDate(submission.submitted_at)}. Bài đã nộp được khóa để giáo viên chấm.</p><p>Trắc nghiệm: {submission.quiz_score}/{submission.quiz_max_score} điểm. {review ? `Tự luận & Python: ${review.manual_score}/${submission.manual_max_score} điểm. Tổng: ${Number(submission.quiz_score) + Number(review.manual_score)}/${Number(submission.quiz_max_score) + Number(submission.manual_max_score)}.` : submission.manual_max_score > 0 ? 'Phần tự luận & Python đang chờ giáo viên chấm.' : ''}</p>{review?.feedback && <p className="question-prompt"><strong>Nhận xét:</strong> {review.feedback}</p>}</div></section>}
-    <div className="assessment-progress" aria-label="Tiến độ bài làm">{questions.map((q, i) => <button key={q.id} onClick={() => document.getElementById(`question-${q.id}`)?.scrollIntoView({ behavior: 'smooth', block: 'start' })} className={isAnswered(q, answers) ? 'complete' : ''}>Câu {i + 1}{isAnswered(q, answers) && <CheckCircle2 size={14}/>}</button>)}</div>
+  return <main className="lab-page assessment-page"><Link className="back" to="/assessments"><ArrowLeft size={16}/> Quiz & Code</Link><div className="lab-heading"><div><p className="eyebrow">{assessment.cs_courses?.title}</p><h1>{assessment.title}</h1><p className="question-prompt">{assessment.instructions}</p><p className="work-meta">Due: {formatDate(assessment.due_at)}</p></div><span className="assessment-badge">{completed}/{questions.length} questions completed</span></div>
+    {staff && <p className="status">Preview mode: try the quiz and Python exercises. Preview answers are not saved or submitted.</p>}
+    {!staff && closed && !done && <p className="alert">This assessment is closed or past its due date. You can still view your saved draft.</p>}
+    {done && <section className="assessment-success" role="status"><CheckCircle2/><div><h2>Submitted successfully</h2><p>Your answers and code were saved at {formatDate(submission.submitted_at)}. Submitted work is locked for teacher review.</p><p>Multiple choice: {submission.quiz_score}/{submission.quiz_max_score} points. {review ? `Short answer & Python: ${review.manual_score}/${submission.manual_max_score} points. Total: ${Number(submission.quiz_score) + Number(review.manual_score)}/${Number(submission.quiz_max_score) + Number(submission.manual_max_score)}.` : submission.manual_max_score > 0 ? 'Short answers and Python exercises are awaiting teacher grading.' : ''}</p>{review?.feedback && <p className="question-prompt"><strong>Feedback:</strong> {review.feedback}</p>}</div></section>}
+    <div className="assessment-progress" aria-label="Assessment progress">{questions.map((q, i) => <button key={q.id} onClick={() => document.getElementById(`question-${q.id}`)?.scrollIntoView({ behavior: 'smooth', block: 'start' })} className={isAnswered(q, answers) ? 'complete' : ''}>Question {i + 1}{isAnswered(q, answers) && <CheckCircle2 size={14}/>}</button>)}</div>
     {questions.map((q, i) => <AssessmentQuestion key={q.id} question={q} number={i + 1} answer={answers[q.id] ?? {}} locked={locked} onChange={answer => change(q.id, answer)}/>)}
     {error && <p className="alert" role="alert">{error}</p>}
-    {!staff && !done && <div className="assessment-footer"><span className="assessment-save" role="status"><Cloud size={18}/>{saveState}</span><div className="heading-actions"><button className="button secondary" disabled={busy || closed} onClick={saveDraft}><Save size={17}/> Lưu nháp</button><button className="button" disabled={busy || closed || completed !== questions.length} onClick={() => setConfirming(true)}><Send size={17}/> Nộp bài</button></div>{completed !== questions.length && <small>Hoàn thành tất cả câu hỏi để nộp bài.</small>}</div>}
-    {confirming && <dialog className="assessment-confirm" style={{ margin: 0 }} ref={dialog => { if (dialog && !dialog.open) dialog.showModal() }} aria-labelledby="confirm-title" onCancel={event => { event.preventDefault(); if (!busy) setConfirming(false) }}><h2 id="confirm-title">Nộp bài kiểm tra?</h2><p>Em đã làm {completed}/{questions.length} câu. Sau khi nộp, câu trả lời và code sẽ được khóa.</p><div className="heading-actions"><button className="button secondary" disabled={busy} onClick={() => setConfirming(false)}>Tiếp tục kiểm tra</button><button className="button" disabled={busy} onClick={() => void submit()}>{busy ? 'Đang nộp…' : 'Xác nhận nộp bài'}</button></div></dialog>}
+    {!staff && !done && <div className="assessment-footer"><span className="assessment-save" role="status"><Cloud size={18}/>{saveState}</span><div className="heading-actions"><button className="button secondary" disabled={busy || closed} onClick={saveDraft}><Save size={17}/> Save draft</button><button className="button" disabled={busy || closed || completed !== questions.length} onClick={() => setConfirming(true)}><Send size={17}/> Submit</button></div>{completed !== questions.length && <small>Complete all questions before submitting.</small>}</div>}
+    {confirming && <dialog className="assessment-confirm" style={{ margin: 0 }} ref={dialog => { if (dialog && !dialog.open) dialog.showModal() }} aria-labelledby="confirm-title" onCancel={event => { event.preventDefault(); if (!busy) setConfirming(false) }}><h2 id="confirm-title">Submit this assessment?</h2><p>You have completed {completed}/{questions.length} questions. After submission, your answers and code will be locked.</p><div className="heading-actions"><button className="button secondary" disabled={busy} onClick={() => setConfirming(false)}>Continue reviewing</button><button className="button" disabled={busy} onClick={() => void submit()}>{busy ? 'Submitting…' : 'Confirm submission'}</button></div></dialog>}
   </main>
 }
