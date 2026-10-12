@@ -1,7 +1,7 @@
 export type Course = { id: string; title: string; description: string; status: 'draft'|'published'|'archived'; teacher_id: string }
 export type Module = { id: string; course_id: string; title: string; description: string; position: number; status: string }
-export type Lesson = { id: string; module_id: string; title: string; introduction: string; learning_objectives: string[]; vocabulary: string[]; position: number; status: string }
-export type Activity = { id: string; lesson_id: string; title: string; instructions: string; activity_type: string; difficulty: string; max_score: number; status: string; cs_coding_challenges?: Challenge | Challenge[] }
+export type Lesson = { id: string; module_id: string; title: string; introduction: string; learning_objectives: string[]; vocabulary: string[]; position: number; status: string; assessment_id?: string | null; cs_assessments?: { id: string; title: string; status: 'draft'|'published'|'closed' } | null }
+export type Activity = { id: string; lesson_id: string; title: string; instructions: string; activity_type: string; difficulty: string; max_score: number; status: string; unlock_assessment_id?: string | null; cs_coding_challenges?: Challenge | Challenge[] }
 export type Challenge = { activity_id: string; starter_code: string; allow_input: boolean; cs_coding_test_cases?: TestCase[] }
 export type TestCase = { id: string; input: string; expected_output?: string; visibility: 'public'|'hidden'; position: number }
 export type Profile = { id: string; full_name: string; email: string; role: string }

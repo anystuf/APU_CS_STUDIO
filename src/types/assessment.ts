@@ -6,6 +6,8 @@ export type AssessmentQuestion = {
   points: number
   options?: string[]
   starter_code?: string
+  required?: boolean
+  hint?: string
 }
 export type Assessment = {
   id: string
@@ -29,6 +31,7 @@ export type AssessmentSubmission = {
   answers: AssessmentAnswers
   quiz_score: number
   quiz_max_score: number
+  quiz_results: Record<string, { correct: boolean; correct_choice: number; feedback: string }>
   manual_max_score: number
   question_snapshot: AssessmentQuestion[]
   submitted_at: string | null

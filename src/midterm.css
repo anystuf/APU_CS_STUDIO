@@ -1,0 +1,21 @@
+.assessment-hint{margin:14px 0;padding:13px 16px;background:#f3f7f3;border:1px solid #dce5df;border-radius:10px}
+.assessment-hint summary{cursor:pointer;color:#176b4d;font-weight:700}
+.assessment-hint pre{white-space:pre-wrap;overflow-wrap:anywhere;font:14px/1.6 ui-monospace,SFMono-Regular,Consolas,monospace}
+.question-prompt-content>p{white-space:pre-wrap;margin:0 0 10px}
+.question-code{margin:10px 0;padding:14px 16px;border-radius:10px;background:#17221b;color:#e5f4e9;white-space:pre;overflow:auto;font:14px/1.6 ui-monospace,SFMono-Regular,Consolas,monospace}
+.quiz-option>span:last-child{white-space:pre-wrap}
+.answer-feedback{padding:13px 16px;border-radius:10px;line-height:1.6}
+.answer-feedback.correct{background:#e3f2e9;color:#155b40}
+.answer-feedback.incorrect{background:#fff1e5;color:#733b18}
+.optional-question{display:flex;align-items:center;gap:9px;width:max-content;color:#52685b;font-weight:600}
+.lesson-content{min-width:0;flex:1}
+.lesson-objectives{padding-left:22px;line-height:1.6;color:#52685b}
+.lesson-required{display:grid;gap:8px;margin:18px 0;padding:16px;background:#f3f7f3;border:1px solid #dce5df;border-radius:12px}
+.lesson-required>div{display:flex;align-items:center;gap:9px;flex-wrap:wrap}
+.lesson-required>div svg{color:#176b4d}
+.lesson-required p{margin:0}
+.lesson-required .button{justify-self:start}
+.optional-practice{margin-top:18px}
+.optional-practice h4{margin:0 0 10px;font:700 16px 'Space Grotesk'}
+.activity-line>a{color:#176b4d;font-weight:700;white-space:nowrap}
+@media(max-width:600px){.lesson-card{padding:16px}.lesson-required .button{width:100%;justify-content:center}.assessment-footer .heading-actions{width:100%}.assessment-footer .heading-actions .button{flex:1}.activity-line{flex-wrap:wrap}.activity-line>a{margin-left:23px}}

@@ -20,6 +20,17 @@ describe('combined assessment answers', () => {
     expect(isAnswered(code, { code: { code: 'print("Bao")' } })).toBe(true)
     expect(initialAnswers([code])).toEqual({ code: { code: '', input: '' } })
   })
+  it('does not count untouched starter code as a completed programming answer', () => {
+    const starter = { ...code, starter_code: 'print("edit me")\n' }
+    expect(isAnswered(starter, initialAnswers([starter]))).toBe(false)
+    expect(isAnswered(starter, { code: { code: 'print("my answer")' } })).toBe(true)
+  })
+  it('allows an unanswered zero-point optional reflection without changing the required-answer check', () => {
+    const reflection: AssessmentQuestion = { id: 'reflection', kind: 'short_answer', prompt: 'Reflect', points: 0, required: false }
+    expect(isAnswered(reflection, {})).toBe(false)
+    expect(validateQuestions([quiz, reflection], { quiz: 0 })).toBeNull()
+    expect(validateQuestions([{ ...reflection, required: true }], {})).toContain('points')
+  })
   it('requires a valid quiz answer key before a teacher can save', () => {
     expect(validateQuestions([quiz], {})).not.toBeNull()
     expect(validateQuestions([quiz, code], { quiz: 0 })).toBeNull()
