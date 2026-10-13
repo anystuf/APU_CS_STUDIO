@@ -18,6 +18,7 @@ export function AssessmentReviewPage() {
   const [assessment, setAssessment] = useState<Assessment | null>(null)
   const [submissions, setSubmissions] = useState<AssessmentSubmission[]>([])
   const [keys, setKeys] = useState<Record<string, number>>({})
+  const [teacherNotes, setTeacherNotes] = useState<Record<string, unknown>>({})
   const [roster, setRoster] = useState<{ id: string; full_name: string; email: string }[]>([])
   const [selected, setSelected] = useState<string | null>(null)
   const [score, setScore] = useState('')
@@ -32,10 +33,11 @@ export function AssessmentReviewPage() {
     const [a, s, k] = await Promise.all([
       supabase.from('cs_assessments').select('*,cs_courses(title,status)').eq('id', assessmentId!).single(),
       supabase.from('cs_assessment_submissions').select('*,cs_profiles(full_name,email),cs_assessment_reviews(*)').eq('assessment_id', assessmentId!).order('updated_at', { ascending: false }),
-      supabase.from('cs_assessment_keys').select('answers').eq('assessment_id', assessmentId!).maybeSingle(),
+      supabase.from('cs_assessment_keys').select('answers,feedback').eq('assessment_id', assessmentId!).maybeSingle(),
     ])
     if (a.error || s.error || k.error) { setMessage(a.error?.message ?? s.error?.message ?? k.error?.message ?? 'Could not load submissions.'); setLoading(false); return }
     setAssessment(a.data as Assessment); setSubmissions((s.data ?? []).map(normalizeSubmission)); setKeys(k.data?.answers ?? {})
+    setTeacherNotes(k.data?.feedback ?? {})
     const enrollments = await supabase.from('cs_enrollments').select('student_id,cs_profiles(id,full_name,email)').eq('course_id', a.data.course_id)
     if (enrollments.error) setMessage(enrollments.error.message)
     else setRoster((enrollments.data ?? []).flatMap(row => row.cs_profiles as unknown as { id: string; full_name: string; email: string }))
@@ -71,6 +73,7 @@ export function AssessmentReviewPage() {
   const missing = roster.filter(p => !submitted.some(s => s.student_id === p.id))
   return <main className="page assessment-page"><Link className="back" to="/assessments"><ArrowLeft size={17}/> Quiz & Code</Link><div className="page-heading"><div><p className="eyebrow">TEACHER · {assessment.cs_courses?.title}</p><h1>{assessment.title}</h1><p>Due: {formatDate(assessment.due_at)}</p></div><div className="heading-actions"><Link className="button secondary" to={`/assessments/${assessment.id}`}><Eye size={17}/> View assessment</Link>{assessment.status === 'draft' ? <button className="button" disabled={busy} onClick={() => void changeStatus('published')}><Send size={17}/> Assign to class</button> : <button className="button secondary" disabled={busy} onClick={() => void changeStatus(assessment.status === 'published' ? 'closed' : 'published')}><Lock size={17}/>{assessment.status === 'published' ? 'Close assessment' : 'Reopen assessment'}</button>}</div></div>
     {assessment.status === 'draft' && <p className="status">This assessment is a draft and is not visible to students. <Link to={`/assessments/${assessment.id}/edit`}>Edit assessment</Link> and review it before assigning it.</p>}
+    {Object.entries(teacherNotes).some(([, note]) => note && typeof note === 'object') && <details className="panel"><summary>Teacher-only coding expectations and rubric</summary>{Object.entries(teacherNotes).filter(([, note]) => note && typeof note === 'object').map(([id, note]) => <section key={id}><h3>{assessment.questions.find(q => q.id === id)?.prompt ?? id}</h3><pre className="review-code">{JSON.stringify(note, null, 2)}</pre></section>)}</details>}
     <div className="stat-grid"><article className="stat"><strong>{submitted.length}/{roster.length}</strong><span>Submitted / students in class</span></article><article className="stat"><strong>{submitted.length - graded.length}</strong><span>Awaiting grading</span></article><article className="stat"><strong>{graded.length}</strong><span>Grades returned</span></article></div>
     {message && <p className="status" role="status">{message}</p>}
     <div className="review-toolbar"><label className="field">Find students<input value={query} onChange={e => setQuery(e.target.value)} placeholder="Name or email"/></label><label className="field">Status<select value={filter} onChange={e => setFilter(e.target.value)}><option value="all">All submissions</option><option value="draft">In progress / draft</option><option value="pending">Submitted, awaiting grading</option><option value="graded">Graded</option></select></label><button className="button secondary" onClick={() => download('apu-assessment-submissions.json', JSON.stringify({ assessment, submissions }, null, 2))}><Download size={17}/> Download submissions</button><button className="button secondary" disabled={loading} onClick={() => void load()}>Refresh</button></div>
