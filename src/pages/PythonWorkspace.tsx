@@ -1,4 +1,4 @@
-import { useEffect, useRef, useState, type ChangeEvent, type CSSProperties } from 'react'
+import { useCallback, useEffect, useRef, useState, type ChangeEvent, type CSSProperties } from 'react'
 import CodeMirror from '@uiw/react-codemirror'
 import { python } from '@codemirror/lang-python'
 import { Download, FileCode2, PanelLeft, Play, Plus, Save, Square, Terminal, Upload } from 'lucide-react'
@@ -22,7 +22,6 @@ function Workspace({ userId }: { userId: string }) {
     catch { return { files: initialFiles, activeFile: 'main.py', input: 'Student', revision: 0, dirty: false } }
   })
   const draftRef = useRef(draft)
-  draftRef.current = draft
   const [loading, setLoading] = useState(true)
   const [saving, setSaving] = useState(false)
   const [running, setRunning] = useState(false)
@@ -41,8 +40,31 @@ function Workspace({ userId }: { userId: string }) {
   const uploadRef = useRef<HTMLInputElement>(null)
   const active = draft.files.find(file => file.name === draft.activeFile) ?? draft.files[0]!
 
+  // A storage event reaches the other tabs/windows of this browser profile.
+  // Publish edits immediately and never republish a received event.
+  const commitDraft = useCallback((update: IdeDraft | ((current: IdeDraft) => IdeDraft)) => {
+    const next = typeof update === 'function' ? update(draftRef.current) : update
+    draftRef.current = next
+    setDraft(next)
+    try { localStorage.setItem(key, JSON.stringify(next)) }
+    catch { setMessage('Browser storage is full or unavailable. Live tab sync is unavailable; save to cloud or download your code now.') }
+  }, [key])
+
+  useEffect(() => {
+    const receive = (event: StorageEvent) => {
+      if (event.storageArea !== localStorage || event.key !== key) return
+      const incoming = readDraft(event.newValue)
+      if (!incoming) return
+      draftRef.current = incoming
+      setDraft(incoming)
+    }
+    window.addEventListener('storage', receive)
+    return () => window.removeEventListener('storage', receive)
+  }, [key])
+
   useEffect(() => {
     let live = true
+    const startingDraft = draftRef.current
     void supabase.from('cs_ide_projects').select('*').eq('user_id', userId).maybeSingle().then(({ data, error }) => {
       if (!live) return
       if (error) setMessage(`Cloud could not load: ${error.message}. Your local draft is preserved.`)
@@ -52,20 +74,14 @@ function Workspace({ userId }: { userId: string }) {
         else {
           setCloudTime(data.updated_at)
           if (draftRef.current.dirty) setMessage('Restored your unsaved local draft. Save to cloud when ready. If another device changed the workspace, load cloud before saving.')
-          else setDraft(remote)
+          else if (draftRef.current === startingDraft) commitDraft(remote)
         }
       }
       setLoading(false)
     })
     return () => { live = false; if (runningRef.current) stopPython() }
-  }, [userId])
+  }, [userId, commitDraft])
   const runningRef = useRef(false)
-
-  useEffect(() => {
-    if (loading) return
-    try { localStorage.setItem(key, JSON.stringify(draft)) }
-    catch { setMessage('Browser storage is full or unavailable. Save to cloud or download your code now.') }
-  }, [draft, key, loading])
 
   useEffect(() => {
     const warn = (event: BeforeUnloadEvent) => { if (draftRef.current.dirty) { event.preventDefault(); event.returnValue = '' } }
@@ -73,7 +89,7 @@ function Workspace({ userId }: { userId: string }) {
     return () => window.removeEventListener('beforeunload', warn)
   }, [])
 
-  const edit = (change: Partial<IdeDraft>) => setDraft(current => ({ ...current, ...change, dirty: true }))
+  const edit = (change: Partial<IdeDraft>) => commitDraft(current => ({ ...current, ...change, dirty: true }))
   const save = async () => {
     const snapshot = draftRef.current
     const invalid = validateFiles(snapshot.files)
@@ -85,7 +101,7 @@ function Workspace({ userId }: { userId: string }) {
       const saved = data?.[0]
       if (!saved) throw new Error('Cloud did not confirm this save.')
       setCloudTime(saved.updated_at)
-      setDraft(current => ({ ...current, revision: saved.revision, dirty: current !== snapshot }))
+      commitDraft(current => ({ ...current, revision: saved.revision, dirty: current !== snapshot }))
       setMessage('Workspace saved to your account. All Python files and program input are saved.')
     } catch (error) { setMessage(error instanceof Error ? error.message : (error as { message?: string }).message ?? 'Cloud save failed. Your local draft is preserved.') }
     finally { setSaving(false) }
@@ -93,12 +109,14 @@ function Workspace({ userId }: { userId: string }) {
   const reloadCloud = async () => {
     if (draftRef.current.dirty && !window.confirm('Replace your unsaved local draft with the cloud version? Download a backup first if you need it.')) return
     setLoading(true)
+    const startingDraft = draftRef.current
     const { data, error } = await supabase.from('cs_ide_projects').select('*').eq('user_id', userId).maybeSingle()
     if (error) setMessage(`Cloud load failed: ${error.message}`)
     else if (!data) setMessage('No cloud workspace yet. Save your current files first.')
     else {
       const remote = readDraft(JSON.stringify({ files: data.files, activeFile: data.active_file, input: data.stdin, revision: data.revision, dirty: false }))
-      if (remote) { setDraft(remote); setCloudTime(data.updated_at); setMessage('Loaded your cloud workspace.') }
+      if (draftRef.current !== startingDraft) setMessage('Another tab updated your workspace while cloud was loading. Its newer draft was kept.')
+      else if (remote) { commitDraft(remote); setCloudTime(data.updated_at); setMessage('Loaded your cloud workspace.') }
       else setMessage('Cloud workspace format is invalid. Local draft kept.')
     }
     setLoading(false)
@@ -173,7 +191,7 @@ function Workspace({ userId }: { userId: string }) {
       <div className="heading-actions"><button className="button secondary" disabled={loading || saving} onClick={() => void save()}><Save size={17}/>{saving ? 'Saving…' : 'Save to cloud'}</button>
       </div>
     </div>
-    <div className="workspace-status"><span>{loading ? 'Loading cloud workspace…' : draft.dirty ? 'Local draft · not yet saved to cloud' : cloudTime ? `Cloud saved · ${new Date(cloudTime).toLocaleString()}` : 'New workspace · save to cloud to sync'}</span><button disabled={loading || saving || running} onClick={() => void reloadCloud()}>Load cloud version</button></div>
+    <div className="workspace-status"><span>{loading ? 'Loading cloud workspace…' : draft.dirty ? 'Local draft · not yet saved to cloud' : cloudTime ? `Cloud saved · ${new Date(cloudTime).toLocaleString()}` : 'New workspace · save to cloud for other devices'} · Live sync between tabs in this browser</span><button disabled={loading || saving || running} onClick={() => void reloadCloud()}>Load cloud version</button></div>
     {message && <p className="status" role="status">{message}</p>}
     <div className="workspace-grid"><aside id="python-files" className="workspace-files" aria-label="Python files" hidden={!sidebarOpen}>
       <h2><FileCode2 size={18}/> Files <small>{draft.files.length}/20</small></h2>
