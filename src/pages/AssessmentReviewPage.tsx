@@ -28,16 +28,22 @@ export function AssessmentReviewPage() {
   const [message, setMessage] = useState('')
   const [loading, setLoading] = useState(true)
   const [busy, setBusy] = useState(false)
+  const [releasedAt, setReleasedAt] = useState<string | null>(null)
+  const [explanationCount, setExplanationCount] = useState(0)
   const load = useCallback(async () => {
     setLoading(true)
-    const [a, s, k] = await Promise.all([
+    const [a, s, k, r, x] = await Promise.all([
       supabase.from('cs_assessments').select('*,cs_courses(title,status)').eq('id', assessmentId!).single(),
       supabase.from('cs_assessment_submissions').select('*,cs_profiles(full_name,email),cs_assessment_reviews(*)').eq('assessment_id', assessmentId!).order('updated_at', { ascending: false }),
       supabase.from('cs_assessment_keys').select('answers,feedback').eq('assessment_id', assessmentId!).maybeSingle(),
+      supabase.from('cs_assessment_answer_releases').select('released_at').eq('assessment_id', assessmentId!).maybeSingle(),
+      supabase.from('cs_assessment_explanations').select('question_id', { count: 'exact', head: true }).eq('assessment_id', assessmentId!),
     ])
-    if (a.error || s.error || k.error) { setMessage(a.error?.message ?? s.error?.message ?? k.error?.message ?? 'Could not load submissions.'); setLoading(false); return }
+    if (a.error || s.error || k.error || r.error || x.error) { setMessage(a.error?.message ?? s.error?.message ?? k.error?.message ?? r.error?.message ?? x.error?.message ?? 'Could not load submissions.'); setLoading(false); return }
     setAssessment(a.data as Assessment); setSubmissions((s.data ?? []).map(normalizeSubmission)); setKeys(k.data?.answers ?? {})
     setTeacherNotes(k.data?.feedback ?? {})
+    setReleasedAt(r.data?.released_at ?? null)
+    setExplanationCount(x.count ?? 0)
     const enrollments = await supabase.from('cs_enrollments').select('student_id,cs_profiles(id,full_name,email)').eq('course_id', a.data.course_id)
     if (enrollments.error) setMessage(enrollments.error.message)
     else setRoster((enrollments.data ?? []).flatMap(row => row.cs_profiles as unknown as { id: string; full_name: string; email: string }))
@@ -55,6 +61,19 @@ export function AssessmentReviewPage() {
     if (!error) await load()
     setBusy(false)
   }
+  const toggleAnswerReview = async () => {
+    if (!assessmentId) return
+    const releasing = !releasedAt
+    if (releasing && !window.confirm('Release the complete answer key and explanations to students who submitted and have been graded?')) return
+    setBusy(true)
+    const { error } = await supabase.rpc('cs_set_answer_release', {
+      p_assessment_id: assessmentId,
+      p_release: releasing,
+    })
+    setMessage(error?.message ?? (releasing ? 'Answer key released to eligible students.' : 'Answer key hidden from students.'))
+    if (!error) await load()
+    setBusy(false)
+  }
   const current = submissions.find(s => s.id === selected)
   const saveReview = async (event: FormEvent) => {
     event.preventDefault()
@@ -69,11 +88,20 @@ export function AssessmentReviewPage() {
   if (!assessment) return <main className="page"><Link to="/assessments">Quiz & Code</Link><p className="alert">{message || 'Assessment not found.'}</p></main>
   const submitted = submissions.filter(s => s.status === 'submitted')
   const graded = submitted.filter(s => s.cs_assessment_reviews?.length)
+  const gradingIncomplete = submitted.filter(s => s.manual_max_score > 0 && !s.cs_assessment_reviews?.length).length
   const visible = submissions.filter(s => (filter === 'all' || (filter === 'draft' ? s.status === 'draft' : filter === 'pending' ? s.status === 'submitted' && !s.cs_assessment_reviews?.length : Boolean(s.cs_assessment_reviews?.length))) && `${s.cs_profiles?.full_name} ${s.cs_profiles?.email}`.toLowerCase().includes(query.toLowerCase()))
   const missing = roster.filter(p => !submitted.some(s => s.student_id === p.id))
   return <main className="page assessment-page"><Link className="back" to="/assessments"><ArrowLeft size={17}/> Quiz & Code</Link><div className="page-heading"><div><p className="eyebrow">TEACHER · {assessment.cs_courses?.title}</p><h1>{assessment.title}</h1><p>Due: {formatDate(assessment.due_at)}</p></div><div className="heading-actions"><Link className="button secondary" to={`/assessments/${assessment.id}`}><Eye size={17}/> View assessment</Link>{assessment.status === 'draft' ? <button className="button" disabled={busy} onClick={() => void changeStatus('published')}><Send size={17}/> Assign to class</button> : <button className="button secondary" disabled={busy} onClick={() => void changeStatus(assessment.status === 'published' ? 'closed' : 'published')}><Lock size={17}/>{assessment.status === 'published' ? 'Close assessment' : 'Reopen assessment'}</button>}</div></div>
     {assessment.status === 'draft' && <p className="status">This assessment is a draft and is not visible to students. <Link to={`/assessments/${assessment.id}/edit`}>Edit assessment</Link> and review it before assigning it.</p>}
     {Object.entries(teacherNotes).some(([, note]) => note && typeof note === 'object') && <details className="panel"><summary>Teacher-only coding expectations and rubric</summary>{Object.entries(teacherNotes).filter(([, note]) => note && typeof note === 'object').map(([id, note]) => <section key={id}><h3>{assessment.questions.find(q => q.id === id)?.prompt ?? id}</h3><pre className="review-code">{JSON.stringify(note, null, 2)}</pre></section>)}</details>}
+    <section className="panel">
+      <h2>Answer key & explanations</h2>
+      <p>Students can review their own answers, the correct choices and explanations only when you release the key. For coding assessments, all submitted programming tasks must be graded first.</p>
+      <p><strong>Content:</strong> {explanationCount}/{assessment.questions.length} explanations · <strong>Status:</strong> {releasedAt ? 'Released' : 'Private (not released)'}</p>
+      {gradingIncomplete > 0 && <p className="status">{gradingIncomplete} submitted programming task(s) still await grading.</p>}
+      {assessment.status !== 'closed' && <p className="status">Close the assessment before releasing answers, to protect ongoing and makeup exams.</p>}
+      <button className="button secondary" disabled={busy || (!releasedAt && (assessment.status !== 'closed' || gradingIncomplete > 0 || explanationCount < assessment.questions.length))} onClick={() => void toggleAnswerReview()}>{releasedAt ? 'Hide answer key' : 'Release answer key & explanations'}</button>
+    </section>
     <div className="stat-grid"><article className="stat"><strong>{submitted.length}/{roster.length}</strong><span>Submitted / students in class</span></article><article className="stat"><strong>{submitted.length - graded.length}</strong><span>Awaiting grading</span></article><article className="stat"><strong>{graded.length}</strong><span>Grades returned</span></article></div>
     {message && <p className="status" role="status">{message}</p>}
     <div className="review-toolbar"><label className="field">Find students<input value={query} onChange={e => setQuery(e.target.value)} placeholder="Name or email"/></label><label className="field">Status<select value={filter} onChange={e => setFilter(e.target.value)}><option value="all">All submissions</option><option value="draft">In progress / draft</option><option value="pending">Submitted, awaiting grading</option><option value="graded">Graded</option></select></label><button className="button secondary" onClick={() => download('apu-assessment-submissions.json', JSON.stringify({ assessment, submissions }, null, 2))}><Download size={17}/> Download submissions</button><button className="button secondary" disabled={loading} onClick={() => void load()}>Refresh</button></div>
