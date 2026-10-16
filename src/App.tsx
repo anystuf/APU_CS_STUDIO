@@ -19,6 +19,7 @@ const AssessmentsPage = lazy(() => import('./pages/AssessmentsPage').then(module
 const AssessmentBuilderPage = lazy(() => import('./pages/AssessmentBuilderPage').then(module => ({ default: module.AssessmentBuilderPage })))
 const AssessmentWorkspacePage = lazy(() => import('./pages/AssessmentWorkspacePage').then(module => ({ default: module.AssessmentWorkspacePage })))
 const AssessmentReviewPage = lazy(() => import('./pages/AssessmentReviewPage').then(module => ({ default: module.AssessmentReviewPage })))
+const StudentAnswerReviewPage = lazy(() => import('./pages/StudentAnswerReviewPage').then(module => ({ default: module.StudentAnswerReviewPage })))
 
 export default function App() {
   return <HashRouter><AuthProvider><Suspense fallback={<main className="center"><p>Loading classroom…</p></main>}><ClassroomRoutes/></Suspense></AuthProvider></HashRouter>
@@ -33,6 +34,7 @@ function ClassroomRoutes() {
       <Route index element={<HomePage/>}/><Route path="python-ide" element={<PythonIdePage/>}/>
       <Route path="assessments" element={<AssessmentsPage/>}/>
       <Route path="assessments/:assessmentId" element={<AssessmentWorkspacePage/>}/>
+      <Route path="assessments/:assessmentId/answers" element={<StudentAnswerReviewPage/>}/>
       <Route element={<ProtectedRoute roles={['student']}/>}><Route path="student" element={<StudentDashboard/>}/><Route path="student/course/:courseId" element={<StudentCoursePage/>}/><Route path="student/activity/:activityId" element={<PythonActivityPage/>}/></Route>
       <Route element={<ProtectedRoute roles={['teacher','admin']}/>}>
         <Route path="teacher/workspaces" element={<StudentWorkspacesPage/>}/>
