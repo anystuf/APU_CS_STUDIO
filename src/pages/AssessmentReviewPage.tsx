@@ -3,6 +3,7 @@ import { Link, useParams } from 'react-router-dom'
 import { ArrowLeft, Download, Eye, Lock, Send } from 'lucide-react'
 import { useAuth } from '../features/auth/AuthProvider'
 import { supabase } from '../lib/supabase/client'
+import { TeacherQuestionAnalysis } from '../components/TeacherQuestionAnalysis'
 import { formatDate, normalizeSubmission } from '../utils/assessment'
 import type { Assessment, AssessmentSubmission } from '../types/assessment'
 
@@ -30,6 +31,7 @@ export function AssessmentReviewPage() {
   const [busy, setBusy] = useState(false)
   const [releasedAt, setReleasedAt] = useState<string | null>(null)
   const [explanationCount, setExplanationCount] = useState(0)
+  const [explanations, setExplanations] = useState<Record<string, string>>({})
   const load = useCallback(async () => {
     setLoading(true)
     const [a, s, k, r, x] = await Promise.all([
@@ -37,13 +39,14 @@ export function AssessmentReviewPage() {
       supabase.from('cs_assessment_submissions').select('*,cs_profiles(full_name,email),cs_assessment_reviews(*)').eq('assessment_id', assessmentId!).order('updated_at', { ascending: false }),
       supabase.from('cs_assessment_keys').select('answers,feedback').eq('assessment_id', assessmentId!).maybeSingle(),
       supabase.from('cs_assessment_answer_releases').select('released_at').eq('assessment_id', assessmentId!).maybeSingle(),
-      supabase.from('cs_assessment_explanations').select('question_id', { count: 'exact', head: true }).eq('assessment_id', assessmentId!),
+      supabase.from('cs_assessment_explanations').select('question_id,explanation').eq('assessment_id', assessmentId!),
     ])
     if (a.error || s.error || k.error || r.error || x.error) { setMessage(a.error?.message ?? s.error?.message ?? k.error?.message ?? r.error?.message ?? x.error?.message ?? 'Could not load submissions.'); setLoading(false); return }
     setAssessment(a.data as Assessment); setSubmissions((s.data ?? []).map(normalizeSubmission)); setKeys(k.data?.answers ?? {})
     setTeacherNotes(k.data?.feedback ?? {})
     setReleasedAt(r.data?.released_at ?? null)
-    setExplanationCount(x.count ?? 0)
+    setExplanationCount(x.data?.length ?? 0)
+    setExplanations(Object.fromEntries((x.data ?? []).map(item => [item.question_id, item.explanation])))
     const enrollments = await supabase.from('cs_enrollments').select('student_id,cs_profiles(id,full_name,email)').eq('course_id', a.data.course_id)
     if (enrollments.error) setMessage(enrollments.error.message)
     else setRoster((enrollments.data ?? []).flatMap(row => row.cs_profiles as unknown as { id: string; full_name: string; email: string }))
@@ -104,6 +107,7 @@ export function AssessmentReviewPage() {
     </section>
     <div className="stat-grid"><article className="stat"><strong>{submitted.length}/{roster.length}</strong><span>Submitted / students in class</span></article><article className="stat"><strong>{submitted.length - graded.length}</strong><span>Awaiting grading</span></article><article className="stat"><strong>{graded.length}</strong><span>Grades returned</span></article></div>
     {message && <p className="status" role="status">{message}</p>}
+    <TeacherQuestionAnalysis assessment={assessment} submissions={submitted} keys={keys} explanations={explanations}/>
     <div className="review-toolbar"><label className="field">Find students<input value={query} onChange={e => setQuery(e.target.value)} placeholder="Name or email"/></label><label className="field">Status<select value={filter} onChange={e => setFilter(e.target.value)}><option value="all">All submissions</option><option value="draft">In progress / draft</option><option value="pending">Submitted, awaiting grading</option><option value="graded">Graded</option></select></label><button className="button secondary" onClick={() => download('apu-assessment-submissions.json', JSON.stringify({ assessment, submissions }, null, 2))}><Download size={17}/> Download submissions</button><button className="button secondary" disabled={loading} onClick={() => void load()}>Refresh</button></div>
     {missing.length > 0 && <details className="panel missing-students"><summary>{missing.length} students have not submitted</summary><p>{missing.map(p => p.full_name || p.email).join(', ')}</p></details>}
     <div className="assessment-review-grid"><section className="submission-list">{visible.map(s => <button className={`submission assessment-student ${selected === s.id ? 'selected' : ''}`} key={s.id} onClick={() => open(s)}><div><strong>{s.cs_profiles?.full_name || s.cs_profiles?.email}</strong><p>{s.cs_profiles?.email}</p><p>{s.status === 'draft' ? `Draft saved ${formatDate(s.updated_at)}` : `Submitted ${formatDate(s.submitted_at)}`}</p></div><span className="assessment-badge">{s.status === 'draft' ? 'In progress' : s.cs_assessment_reviews?.length ? 'Graded' : 'Awaiting grading'}</span></button>)}{!visible.length && <div className="empty"><h2>No matching submissions</h2><p>Work appears when students save a draft or submit.</p></div>}</section>
