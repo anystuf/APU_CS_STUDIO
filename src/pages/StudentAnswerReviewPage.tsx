@@ -60,9 +60,7 @@ export function StudentAnswerReviewPage() {
     {!error && !review?.available && <section className="panel"><LockKeyhole size={22}/><h2>Review not available yet</h2><p>{blocked[review?.reason ?? ''] ?? 'Please check again after your teacher releases the results.'}</p></section>}
     {review?.available && <>
       <section className="assessment-success"><CheckCircle2/><div><h2>Answer key released</h2>
-        <p>Multiple choice: {review.quiz_score}/{review.quiz_max_score} points.</p>
-        {review.manual_score !== null && <p>Programming: {review.manual_score}/{review.manual_max_score} points.</p>}
-        {review.teacher_feedback && <p><strong>Teacher feedback:</strong> {review.teacher_feedback}</p>}
+        <p>Review your selected answers, read the explanations, and correct your own mistakes. Your teacher will announce official grades separately.</p>
       </div></section>
       {review.questions?.map(q => <section className="panel assessment-question" key={q.id}>
         <div className="question-header"><h2>Question {q.number}</h2><strong>{q.points} points</strong></div>
