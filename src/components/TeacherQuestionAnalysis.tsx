@@ -20,9 +20,12 @@ type Props = {
   keys: Record<string, number>
   explanations: Record<string, string>
 }
-const answerLabel = (options: string[] | undefined, choice: number | null) =>
-  choice === null ? 'Not answered' : choice >= 0 && options?.[choice] !== undefined
-    ? '(' + String.fromCharCode(65 + choice) + ') ' + options[choice] : 'Unknown choice'
+const answerLabel = (options: string[] | undefined, choice: number | null) => {
+  if (choice === null) return 'Not answered'
+  const value = options?.[choice]
+  return choice >= 0 && value !== undefined
+    ? '(' + String.fromCharCode(65 + choice) + ') ' + value : 'Unknown choice'
+}
 const summary = (s: string) => s.split('\n')[0].slice(0, 125)
 const safeCell = (v: unknown) => {
   let s = String(v ?? '')
