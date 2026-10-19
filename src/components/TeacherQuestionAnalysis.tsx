@@ -44,13 +44,17 @@ export function TeacherQuestionAnalysis({ assessment, submissions, keys, explana
   const [mistakesOnly, setMistakesOnly] = useState(true)
   const submitted = useMemo(() => submissions.filter(s => s.status === 'submitted'), [submissions])
   const mcqs = assessment.questions.filter(q => q.kind === 'multiple_choice')
-  const keyReady = mcqs.length > 0 && mcqs.every(q => Number.isInteger(keys[q.id]) && keys[q.id] >= 0 && keys[q.id] < (q.options?.length ?? 0))
+  const keyReady = mcqs.length > 0 && mcqs.every(q => {
+    const correct = keys[q.id]
+    return correct !== undefined && Number.isInteger(correct) && correct >= 0 && correct < (q.options?.length ?? 0)
+  })
   const studentRows = useMemo(() => submitted.map(s => {
     const questions = (s.question_snapshot?.length ? s.question_snapshot : assessment.questions)
     const wrong: Missed[] = questions.flatMap((q,index) => {
-      if (q.kind !== 'multiple_choice' || !Number.isInteger(keys[q.id])) return []
+      const correct = keys[q.id]
+      if (q.kind !== 'multiple_choice' || correct === undefined || !Number.isInteger(correct)) return []
       const choice = s.answers?.[q.id]?.choice
-      if (choice === keys[q.id]) return []
+      if (choice === correct) return []
       return [{
         student: s.cs_profiles?.full_name || s.cs_profiles?.email || 'Unknown student',
         email: s.cs_profiles?.email || '',
@@ -59,7 +63,7 @@ export function TeacherQuestionAnalysis({ assessment, submissions, keys, explana
         number: index+1,
         question: q,
         choice: Number.isInteger(choice) ? choice! : null,
-        correct: keys[q.id],
+        correct,
         explanation: explanations[q.id] || 'Explanation is not available yet.',
       }]
     })
@@ -83,7 +87,7 @@ export function TeacherQuestionAnalysis({ assessment, submissions, keys, explana
     const choice=row.s.answers?.[q.id]?.choice
     return [{student:row.name,email:row.email,studentId:row.s.student_id,
       submissionId:row.s.id,number:i+1,question:q,
-      choice:Number.isInteger(choice)?choice!:null, correct:keys[q.id],
+      choice:Number.isInteger(choice)?choice!:null, correct:keys[q.id]!,
       explanation:explanations[q.id]||'Explanation is not available yet.'} satisfies Missed]
   }))
   const details=mistakesOnly?shownMistakes:allAnswers
