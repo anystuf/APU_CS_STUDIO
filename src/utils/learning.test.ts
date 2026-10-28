@@ -1,5 +1,5 @@
 import { describe, expect, it } from 'vitest'
-import { canAccessTeacherRoutes, masteryFromScore, scorePassedTests } from './learning'
+import { activityTestSummary, canAccessTeacherRoutes, masteryFromScore, scorePassedTests } from './learning'
 
 describe('masteryFromScore', () => {
   it('keeps missing work distinct from low performance', () => expect(masteryFromScore(null)).toBe('not_started'))
@@ -15,7 +15,11 @@ describe('coding challenge scoring', () => {
     expect(scorePassedTests([true, false, true])).toBe(67)
     expect(scorePassedTests([true, true], 20)).toBe(20)
   })
-  it('awards the configured score when no tests exist', () => expect(scorePassedTests([], 25)).toBe(25))
+  it('keeps activities without tests awaiting teacher review instead of awarding full marks', () => {
+    expect(scorePassedTests([], 25)).toBe(0)
+    expect(activityTestSummary([], 25)).toMatchObject({ status: 'submitted', score: 0 })
+    expect(activityTestSummary([false, true], 20)).toMatchObject({ status: 'failed', score: 10 })
+  })
 })
 
 describe('teacher route permissions', () => {

@@ -1,4 +1,5 @@
 import { useCallback, useEffect, useState } from 'react'
+import { Link, useSearchParams } from 'react-router-dom'
 import { CheckCircle2, Clock, Code2, MessageSquare, Save, Search } from 'lucide-react'
 import { supabase } from '../lib/supabase/client'
 import { useAuth } from '../features/auth/AuthProvider'
@@ -7,6 +8,8 @@ import type { Attempt, CodeWorkspace } from '../types/classroom'
 type ReviewTab = 'saved' | 'submitted'
 
 export function TeacherSubmissionsPage() {
+  const [params] = useSearchParams()
+  const activityId = params.get('activity')
   const { session } = useAuth()
   const [tab, setTab] = useState<ReviewTab>('saved')
   const [workspaces, setWorkspaces] = useState<CodeWorkspace[]>([])
@@ -16,10 +19,10 @@ export function TeacherSubmissionsPage() {
   const [message, setMessage] = useState('')
 
   const load = useCallback(async () => {
-    const [workspaceResult, attemptResult] = await Promise.all([
-      supabase.from('cs_code_workspaces').select('*,cs_profiles(full_name,email),cs_activities(title),cs_workspace_feedback(*)').order('updated_at', { ascending: false }),
-      supabase.from('cs_activity_attempts').select('*,cs_profiles(full_name,email),cs_activities(title),cs_teacher_feedback(*)').order('submitted_at', { ascending: false }),
-    ])
+    let workspaceQuery = supabase.from('cs_code_workspaces').select('*,cs_profiles(full_name,email),cs_activities(title),cs_workspace_feedback(*)').order('updated_at', { ascending: false })
+    let attemptQuery = supabase.from('cs_activity_attempts').select('*,cs_profiles(full_name,email),cs_activities(title),cs_teacher_feedback(*)').order('submitted_at', { ascending: false })
+    if (activityId) { workspaceQuery = workspaceQuery.eq('activity_id', activityId); attemptQuery = attemptQuery.eq('activity_id', activityId) }
+    const [workspaceResult, attemptResult] = await Promise.all([workspaceQuery, attemptQuery])
     if (workspaceResult.error || attemptResult.error) {
       setMessage(workspaceResult.error?.message ?? attemptResult.error?.message ?? 'Could not load student work')
       return
@@ -32,7 +35,7 @@ export function TeacherSubmissionsPage() {
       ...workspaceRows.map((workspace) => [`workspace-${workspace.id}`, workspace.cs_workspace_feedback?.[0]?.comment ?? '']),
       ...attemptRows.map((attempt) => [`attempt-${attempt.id}`, attempt.cs_teacher_feedback?.[0]?.comment ?? '']),
     ]))
-  }, [])
+  }, [activityId])
 
   useEffect(() => { void load() }, [load])
 
@@ -68,6 +71,7 @@ export function TeacherSubmissionsPage() {
   return <main className="page">
     <p className="eyebrow">CLASSWORK</p><h1>Student code</h1>
     <p className="lede">Open saved work, track submissions, and give feedback from one classroom inbox.</p>
+    {activityId && <p className="status">Showing only the selected activity. <Link to={`/teacher/activity/${activityId}`}>Back to activity</Link> · <Link to="/teacher/submissions">Show all student work</Link></p>}
     <div className="review-toolbar">
       <div className="tabs review-tabs">
         <button className={tab === 'saved' ? 'active' : ''} onClick={() => setTab('saved')}><Save size={17}/> Saved work <span>{workspaces.length}</span></button>
@@ -86,7 +90,7 @@ export function TeacherSubmissionsPage() {
       {!visibleWorkspaces.length && <div className="empty"><Save/><h2>No saved work yet</h2><p>When students press Save code inside an exercise, their work appears here.</p></div>}
     </div> : <div className="submission-list">
       {visibleAttempts.map((attempt) => <article className="submission" key={attempt.id}>
-        <div className="submission-head"><div className="avatar"><Code2/></div><div><h2>{attempt.cs_activities?.title}</h2><p>{attempt.cs_profiles?.full_name || attempt.cs_profiles?.email} · Attempt {attempt.attempt_number}</p></div><strong className={attempt.status === 'passed' ? 'score passed' : 'score'}>{Number(attempt.score)}%</strong></div>
+        <div className="submission-head"><div className="avatar"><Code2/></div><div><h2>{attempt.cs_activities?.title}</h2><p>{attempt.cs_profiles?.full_name || attempt.cs_profiles?.email} · Attempt {attempt.attempt_number}</p></div><strong className={attempt.status === 'passed' ? 'score passed' : 'score'}>{attempt.status === 'submitted' ? 'Awaiting review' : `${Number(attempt.score)} points`}</strong></div>
         <pre>{attempt.code}</pre><footer>{attempt.status === 'passed' ? <CheckCircle2/> : <Clock/>}{attempt.status} · {new Date(attempt.submitted_at).toLocaleString()}</footer>
         <div className="feedback-box"><label><MessageSquare size={17}/> Submission feedback</label><textarea value={drafts[`attempt-${attempt.id}`] ?? ''} onChange={(event) => setDrafts((current) => ({ ...current, [`attempt-${attempt.id}`]: event.target.value }))} placeholder="Name a strength and one useful next step…"/><button className="button compact" onClick={() => void saveSubmissionFeedback(attempt)}>Save feedback</button></div>
       </article>)}
