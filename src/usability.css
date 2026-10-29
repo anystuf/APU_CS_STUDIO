@@ -1,0 +1,105 @@
+/* Shared HCI foundation. Scope shell rules above lazy-loaded IDE styles. */
+:root { --focus: #145cc5; --muted: #526359; }
+body { line-height: 1.6; }
+.app-shell { min-height: 100dvh; display: flex; flex-direction: column; }
+#main-content { flex: 1; min-width: 0; }
+.skip-link { position: fixed; top: 8px; left: 12px; z-index: 100; transform: translateY(-200%); background: #fff; color: #123e2c; padding: 12px 18px; border: 2px solid #145cc5; border-radius: 8px; font-weight: 700; }
+.skip-link:focus { transform: none; }
+:where(button, a, input, textarea, select, summary, [tabindex]):focus-visible { outline: 3px solid var(--focus); outline-offset: 3px; }
+.app-shell :where(button, a, input, textarea, select, summary, [tabindex]):focus-visible { outline-color: var(--focus); }
+#main-content:focus, h1[tabindex="-1"]:focus { outline: none; }
+:where(button, input, select, textarea, summary) { scroll-margin-block: 110px 100px; }
+button, .button, .icon-button, summary { min-height: 44px; }
+button:disabled { cursor: not-allowed; }
+input[type="checkbox"], input[type="radio"] { width: 20px; height: 20px; flex-shrink: 0; accent-color: var(--green); }
+input, select, textarea { max-width: 100%; }
+summary { cursor: pointer; padding-block: 8px; }
+summary::marker { color: var(--green); }
+section, article, fieldset, .builder-grid > *, .two-column > *, .dashboard-actions > * { min-width: 0; }
+.page { margin-block: 32px 48px; }
+.page h1, .lab-heading h1 { font-size: clamp(1.8rem, 2.7vw, 2.6rem); line-height: 1.2; letter-spacing: -.025em; overflow-wrap: anywhere; }
+.page h2 { font-size: 1.35rem; line-height: 1.35; }
+.page h3 { line-height: 1.4; }
+.page p, .page li { overflow-wrap: anywhere; }
+.lede { line-height: 1.65; margin-top: 8px; }
+.app-shell .topbar { height: auto; min-height: 72px; padding: 10px 24px; gap: 20px; flex-wrap: nowrap; }
+.app-shell .topbar .brand { font-size: 22px; flex-shrink: 0; margin-right: 0; white-space: nowrap; }
+.app-shell .topbar .classroom-nav { display: flex; gap: 8px; flex: 1; font-size: 13px; align-items: center; overflow: visible; }
+.classroom-nav a { display: inline-flex; align-items: center; justify-content: center; gap: 5px; min-height: 44px; padding: 8px; border-radius: 6px; white-space: nowrap; }
+.classroom-nav a:hover { background: #f0f5f2; }
+.classroom-nav a[aria-current="page"] { color: #15583f; background: #e5f1e9; text-decoration: underline; text-underline-offset: 6px; text-decoration-thickness: 2px; }
+.app-shell .topbar .navigation-toggle { display: none; }
+.app-shell .topbar .sign-out { margin-left: auto; white-space: nowrap; font-size: 14px; }
+.app-shell .topbar .icon-button { padding: 8px; border-radius: 6px; }
+.app-footer { display: flex; flex-wrap: wrap; gap: 8px 24px; justify-content: space-between; padding: 20px max(20px, calc((100% - 1120px)/2)); color: var(--muted); font-size: 13px; border-top: 1px solid var(--line); background: white; }
+.app-footer a { min-height: 44px; display: inline-flex; align-items: center; color: var(--green); }
+.connection-notice { display: flex; align-items: flex-start; gap: 10px; background: #fff3cb; color: #573c0b; padding: 12px 24px; }
+.connection-notice svg { flex-shrink: 0; margin-top: 4px; }
+.heading-actions { flex-wrap: wrap; }
+.row-actions button { min-width: 44px; min-height: 44px; border-radius: 6px; }
+.row-actions { flex-shrink: 0; }
+.outline-card h3, .lesson-line, .activity-line { flex-wrap: wrap; }
+.activity-line { margin-left: 0; gap: 10px; padding-block: 12px; border-bottom: 1px solid var(--line); }
+.activity-line > span:nth-child(2), .lesson-line > strong { flex: 1 1 180px; overflow-wrap: anywhere; }
+.outline-card > .panel, .lesson-group > .panel { padding: 10px 14px; margin-block: 10px; border-radius: 8px; background: #f8faf8; }
+.outline-card summary { font-size: 14px; font-weight: 600; }
+.pill.light { max-width: 100%; white-space: normal; }
+.course-grid { grid-template-columns: repeat(auto-fit, minmax(min(100%, 280px), 1fr)); }
+.course-card { padding: 22px; }
+.course-card h2, .course-card h3 { overflow-wrap: anywhere; }
+.course-card .text-link { min-height: 44px; }
+.review-search:focus-within { outline: 3px solid var(--focus); outline-offset: 3px; }
+.filter-toolbar { display: grid; grid-template-columns: minmax(0, 1fr) minmax(160px, .35fr); gap: 16px; margin-block: 24px 8px; }
+.filter-summary { color: var(--muted); font-size: 14px; }
+.dashboard-guide { border-left: 4px solid var(--green); margin-block: 24px; }
+.dashboard-guide h2 { margin-top: 0; }
+.dashboard-guide p { margin-bottom: 0; }
+.help-page > .panel { margin-block: 20px; }
+.help-page li { margin-block: 12px; }
+.help-page h2 { margin-top: 0; }
+.help-comparison { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 22px; }
+.help-comparison h3 { font-size: 1rem; }
+.help-comparison p { font-size: 15px; }
+.alert { border: 1px solid #c49c43; color: #513c12; }
+.alert .button { margin: 8px; }
+.status { color: #513c12; line-height: 1.6; }
+.hero-card { padding: 28px; border-radius: 16px; margin-bottom: 28px; gap: 24px; }
+.hero-card h2 { font-size: 26px; }
+.help-link { display: inline-flex; align-items: center; min-height: 44px; color: var(--green); }
+@media (max-width: 1199px) {
+  .app-shell .topbar { position: static; flex-wrap: wrap; gap: 8px; padding: 10px 20px; }
+  .app-shell .topbar .navigation-toggle { display: inline-flex; margin-left: auto; font-size: 14px; }
+  .app-shell .topbar .sign-out { margin-left: 0; }
+  .app-shell .topbar .classroom-nav { display: none; }
+  .app-shell .topbar .classroom-nav.menu-open { display: grid; grid-template-columns: repeat(2,minmax(0,1fr)); order: 4; flex-basis: 100%; position: static; padding: 10px 0; box-shadow: none; border: 0; background: white; white-space: normal; }
+  .classroom-nav a { justify-content: flex-start; white-space: normal; }
+  .help-comparison { grid-template-columns: 1fr; gap: 8px; }
+}
+@media (max-width: 600px) {
+  .app-shell .topbar { padding: 8px 12px; }
+  .app-shell .topbar .brand { font-size: 19px; }
+  .page, .lab-page { width: calc(100% - 28px); margin-top: 24px; }
+  .panel, .stat, .submission { padding: 18px; }
+  .hero-card { padding: 22px; }
+  .filter-toolbar, .stat-grid, .dashboard-actions { grid-template-columns: 1fr; }
+  .heading-actions .button { white-space: normal; }
+  .tabs { flex-wrap: wrap; }
+  .lesson-line { padding-inline: 8px; gap: 8px; }
+  .outline-card { padding: 14px; }
+  .module-block { grid-template-columns: 1fr; }
+  .lesson-card { padding: 16px; gap: 8px; }
+  .activity-links a { flex-wrap: wrap; width: 100%; }
+  .student-row, .submission-head { flex-wrap: wrap; }
+  .student-row > div:nth-child(2) { min-width: 140px; overflow-wrap: anywhere; }
+  .auth-page { padding: 14px; }
+  .auth-card { padding: 24px; }
+  .app-footer { padding: 16px; }
+}
+@media (prefers-reduced-motion: reduce) {
+  *, *::before, *::after { scroll-behavior: auto !important; animation-duration: .01ms !important; animation-iteration-count: 1 !important; transition-duration: .01ms !important; }
+  .course-card:hover { transform: none; }
+}
+@media (forced-colors: active) {
+  .button, .pill, .classroom-nav a[aria-current="page"] { border: 1px solid ButtonText; }
+  :focus-visible { outline: 3px solid Highlight !important; }
+}

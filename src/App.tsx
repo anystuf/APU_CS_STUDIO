@@ -10,6 +10,7 @@ import { TeacherCoursesPage } from './pages/TeacherCoursesPage'
 import { TeacherCoursePage } from './pages/TeacherCoursePage'
 import { TeacherSubmissionsPage } from './pages/TeacherSubmissionsPage'
 import { UnauthorizedPage } from './pages/UnauthorizedPage'
+import { HelpPage } from './pages/HelpPage'
 const TeacherActivityManagerPage = lazy(() => import('./pages/TeacherActivityManagerPage').then(module => ({ default: module.TeacherActivityManagerPage })))
 const StudentWorkspacesPage = lazy(() => import('./pages/StudentWorkspacesPage').then(module => ({ default: module.StudentWorkspacesPage })))
 
@@ -32,7 +33,7 @@ function ClassroomRoutes() {
   return <Routes>
     <Route path="/login" element={<LoginPage/>}/>
     <Route element={<ProtectedRoute/>}><Route element={<AppLayout/>}>
-      <Route index element={<HomePage/>}/><Route path="python-ide" element={<PythonIdePage/>}/>
+      <Route index element={<HomePage/>}/><Route path="help" element={<HelpPage/>}/><Route path="python-ide" element={<PythonIdePage/>}/>
       <Route path="assessments" element={<AssessmentsPage/>}/>
       <Route path="assessments/:assessmentId" element={<AssessmentWorkspacePage/>}/>
       <Route path="assessments/:assessmentId/answers" element={<StudentAnswerReviewPage/>}/>

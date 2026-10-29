@@ -4,5 +4,6 @@ import App from './App'
 import './styles.css'
 import './assessment.css'
 import './midterm.css'
+import './usability.css'
 
 ReactDOM.createRoot(document.getElementById('root')!).render(<React.StrictMode><App /></React.StrictMode>)

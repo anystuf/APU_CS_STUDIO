@@ -33,14 +33,14 @@ export function LoginPage() {
     try {
     if (mode === 'reset') {
       await resetPassword(email)
-      setMessage('If this email has a Firebase account, a password-reset email has been requested. Check your inbox and spam folder.')
+      setMessage('If an account exists for this email, a password-reset email has been requested. Check your inbox and spam folder.')
     } else if (mode === 'signin') {
       await signIn(email, password)
     } else {
       await signUp(email, password, name)
       setPassword('')
       setConfirmation('')
-      setMessage('Account created in Firebase. Confirm your verification email, then sign in here. Check your spam folder too.')
+      setMessage('Your account was created. Confirm your email using the verification link, then sign in here. Check your spam folder too.')
     }
     } catch (error) {
       setMessage(authErrorMessage(error))
@@ -52,7 +52,7 @@ export function LoginPage() {
   return <main className="auth-page"><section className="auth-card">
     <div className="auth-logo"><Code2/></div>
     <p className="eyebrow">PYTHON CLASSROOM</p><h1>{mode === 'reset' ? 'Recover your account' : mode === 'signin' ? 'Welcome back' : 'Create your account'}</h1>
-    <p>{mode === 'reset' ? 'Enter your account email to request a link for setting a new password.' : mode === 'signin' ? `Sign in to ${appConfig.appName} with your Gmail and password.` : 'Students can create an account, open the Python IDE, and save work for their teacher.'}</p>
+    <p>{mode === 'reset' ? 'Enter your account email to request a link for setting a new password.' : mode === 'signin' ? `Sign in to ${appConfig.appName} with your email and password.` : 'Students can create an account, open the Python IDE, and save work for their teacher.'}</p>
     {!isSupabaseConfigured && <p className="alert">Account service is not configured yet.</p>}
     <div className="auth-tabs" aria-label="Account options">
       <button type="button" disabled={busy} aria-pressed={mode === 'signin'} className={mode === 'signin' ? 'active' : ''} onClick={() => switchMode('signin')}><LogIn size={17}/> Sign in</button>

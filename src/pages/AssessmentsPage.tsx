@@ -13,6 +13,8 @@ export function AssessmentsPage() {
   const [work, setWork] = useState<AssessmentSubmission[]>([])
   const [loading, setLoading] = useState(true)
   const [error, setError] = useState('')
+  const [search, setSearch] = useState('')
+  const [status, setStatus] = useState('all')
   const load = useCallback(async () => {
     setLoading(true); setError('')
     const [a, s] = await Promise.all([
@@ -24,16 +26,20 @@ export function AssessmentsPage() {
     setLoading(false)
   }, [])
   useEffect(() => { void load() }, [load])
+  const visibleItems = items.filter(item => (status === 'all' || item.status === status) && `${item.title} ${item.cs_courses?.title ?? ''}`.toLowerCase().includes(search.trim().toLowerCase()))
   return <main className="page assessment-page">
     <div className="page-heading"><div><p className="eyebrow">APU CLASSROOM</p><h1>Quiz & Code</h1><p className="lede">Take quizzes, run Python, and submit your work in one place.</p></div>{staff && <Link to="/assessments/new" className="button"><Plus size={18}/> Create assessment</Link>}</div>
     <section className="assessment-banner"><ClipboardCheck size={32}/><div><h2>{staff ? 'One assessment. One submission. All your work.' : 'Your work is saved automatically.'}</h2><p>{staff ? 'Assign assessments to your class, review each student’s answers and code, and return grades and feedback.' : 'Complete the sections in any order. Check the save status before leaving, and submit when you are finished.'}</p></div></section>
+    <div className="filter-toolbar"><label className="field">Search assessments<input type="search" value={search} onChange={e => setSearch(e.target.value)} placeholder="Assessment or course title"/></label><label className="field">Assessment status<select value={status} onChange={e => setStatus(e.target.value)}><option value="all">All statuses</option><option value="published">Open</option>{staff && <option value="draft">Draft</option>}<option value="closed">Closed</option></select></label></div>
+    {!loading && !error && <p className="filter-summary" role="status">Showing {visibleItems.length} of {items.length} assessments</p>}
     {loading && <p role="status">Loading assessments…</p>}
     {error && <div className="alert" role="alert">Could not load data: {error} <button className="button compact secondary" onClick={() => void load()}>Retry</button></div>}
-    <div className="course-grid">{items.map(a => {
+    <div className="course-grid">{visibleItems.map(a => {
       const submissions = work.filter(s => s.assessment_id === a.id)
       const done = !staff && submissions.length > 0
       return <article className="course-card" key={a.id}><div className="assessment-card-top"><ClipboardCheck/><span className={`assessment-badge ${done ? 'submitted' : a.status}`}>{done ? 'Submitted' : a.status === 'draft' ? 'Draft' : a.status === 'closed' ? 'Closed' : 'Open'}</span></div><h2>{a.title}</h2><p>{a.cs_courses?.title}</p><p>{a.questions.filter(q => q.kind !== 'python').length} quiz questions · {a.questions.filter(q => q.kind === 'python').length} Python exercises · {a.questions.reduce((sum, q) => sum + q.points, 0)} points</p><p className="work-meta">Due: {formatDate(a.due_at)}</p>{staff && <p>{submissions.length} submissions · {submissions.filter(s => s.cs_assessment_reviews?.length).length} graded</p>}<Link className="text-link" to={staff ? `/assessments/${a.id}/review` : `/assessments/${a.id}`}>{staff ? 'Manage & grade' : done ? 'View submission' : 'Start assessment'} <ArrowRight size={16}/></Link>{!staff && done && <Link className="text-link" to={`/assessments/${a.id}/answers`}>Answer key & explanations <ArrowRight size={16}/></Link>}{staff && <Link to={`/assessments/${a.id}`} className="text-link"><Code2 size={16}/> Preview assessment</Link>}</article>
     })}</div>
+    {!loading && !error && items.length > 0 && !visibleItems.length && <div className="empty"><h2>No matching assessments</h2><p>Try another title or show all statuses.</p><button className="button secondary" onClick={() => { setSearch(''); setStatus('all') }}>Clear filters</button></div>}
     {!loading && !error && !items.length && <div className="empty"><ClipboardCheck/><h2>No assessments yet</h2><p>{staff ? 'Create an assessment with multiple-choice questions, short answers, and Python exercises, then assign it to your class.' : 'Assessments appear here when your teacher assigns them to your class.'}</p>{staff && <Link className="button" to="/assessments/new">Create your first assessment</Link>}</div>}
   </main>
 }
