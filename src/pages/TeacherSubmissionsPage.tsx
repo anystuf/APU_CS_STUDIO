@@ -24,7 +24,7 @@ export function TeacherSubmissionsPage() {
     if (activityId) { workspaceQuery = workspaceQuery.eq('activity_id', activityId); attemptQuery = attemptQuery.eq('activity_id', activityId) }
     const [workspaceResult, attemptResult] = await Promise.all([workspaceQuery, attemptQuery])
     if (workspaceResult.error || attemptResult.error) {
-      setMessage(workspaceResult.error?.message ?? attemptResult.error?.message ?? 'Could not load student work')
+      setMessage(workspaceResult.error?.message ?? attemptResult.error?.message ?? 'We couldn’t load student work. Please try again.')
       return
     }
     const workspaceRows = (workspaceResult.data ?? []) as CodeWorkspace[]
@@ -47,7 +47,7 @@ export function TeacherSubmissionsPage() {
       ? supabase.from('cs_workspace_feedback').update({ comment, updated_at: new Date().toISOString() }).eq('id', existing.id)
       : supabase.from('cs_workspace_feedback').insert({ workspace_id: workspace.id, student_id: workspace.student_id, teacher_id: session!.user.id, comment })
     const { error } = await request
-    setMessage(error?.message ?? 'Review saved and visible to the student')
+    setMessage(error?.message ?? 'Your feedback has been saved. The student can now see it.')
     void load()
   }
 
@@ -59,7 +59,7 @@ export function TeacherSubmissionsPage() {
       ? supabase.from('cs_teacher_feedback').update({ comment, updated_at: new Date().toISOString() }).eq('id', existing.id)
       : supabase.from('cs_teacher_feedback').insert({ attempt_id: attempt.id, student_id: attempt.student_id, teacher_id: session!.user.id, comment })
     const { error } = await request
-    setMessage(error?.message ?? 'Feedback saved and visible to the student')
+    setMessage(error?.message ?? 'Your feedback has been saved. The student can now see it.')
     void load()
   }
 
@@ -69,32 +69,32 @@ export function TeacherSubmissionsPage() {
   const visibleAttempts = attempts.filter((attempt) => matches(attempt.cs_profiles?.full_name || attempt.cs_profiles?.email, attempt.cs_activities?.title))
 
   return <main className="page">
-    <p className="eyebrow">CLASSWORK</p><h1>Student code</h1>
-    <p className="lede">Open saved work, track submissions, and give feedback from one classroom inbox.</p>
-    {activityId && <p className="status">Showing only the selected activity. <Link to={`/teacher/activity/${activityId}`}>Back to activity</Link> · <Link to="/teacher/submissions">Show all student work</Link></p>}
+    <p className="eyebrow">STUDENT WORK</p><h1>Student work</h1>
+    <p className="lede">Review students’ saved code and submitted work, then share feedback to guide their next steps.</p>
+    {activityId && <p className="status">Showing work for this activity only. <Link to={`/teacher/activity/${activityId}`}>Back to Activity</Link> · <Link to="/teacher/submissions">View All Student Work</Link></p>}
     <div className="review-toolbar">
       <div className="tabs review-tabs">
-        <button className={tab === 'saved' ? 'active' : ''} onClick={() => setTab('saved')}><Save size={17}/> Saved work <span>{workspaces.length}</span></button>
-        <button className={tab === 'submitted' ? 'active' : ''} onClick={() => setTab('submitted')}><CheckCircle2 size={17}/> Submitted <span>{attempts.length}</span></button>
+        <button className={tab === 'saved' ? 'active' : ''} onClick={() => setTab('saved')}><Save size={17}/> Saved Drafts <span>{workspaces.length}</span></button>
+        <button className={tab === 'submitted' ? 'active' : ''} onClick={() => setTab('submitted')}><CheckCircle2 size={17}/> Submissions <span>{attempts.length}</span></button>
       </div>
-      <label className="review-search"><Search size={17}/><input value={query} onChange={(event) => setQuery(event.target.value)} placeholder="Search student or exercise"/></label>
+      <label className="review-search"><Search size={17}/><input value={query} onChange={(event) => setQuery(event.target.value)} placeholder="Search by student or activity"/></label>
     </div>
     {message && <p className="status">{message}</p>}
     {tab === 'saved' ? <div className="submission-list">
       {visibleWorkspaces.map((workspace) => <article className="submission" key={workspace.id}>
-        <div className="submission-head"><div className="avatar"><Code2/></div><div><h2>{workspace.cs_activities?.title}</h2><p>{workspace.cs_profiles?.full_name || workspace.cs_profiles?.email}</p></div><strong className="work-state">In progress</strong></div>
-        <p className="work-meta">Last saved {new Date(workspace.updated_at).toLocaleString()}</p>
+        <div className="submission-head"><div className="avatar"><Code2/></div><div><h2>{workspace.cs_activities?.title}</h2><p>{workspace.cs_profiles?.full_name || workspace.cs_profiles?.email}</p></div><strong className="work-state">Draft</strong></div>
+        <p className="work-meta">Last saved: {new Date(workspace.updated_at).toLocaleString()}</p>
         <pre>{workspace.code || '# No code entered yet'}</pre>
-        <div className="feedback-box"><label><MessageSquare size={17}/> Review this saved code</label><textarea value={drafts[`workspace-${workspace.id}`] ?? ''} onChange={(event) => setDrafts((current) => ({ ...current, [`workspace-${workspace.id}`]: event.target.value }))} placeholder="Name a strength and one useful next step…"/><button className="button compact" onClick={() => void saveWorkspaceReview(workspace)}>Save review</button></div>
+        <div className="feedback-box"><label><MessageSquare size={17}/> Feedback on this draft</label><textarea value={drafts[`workspace-${workspace.id}`] ?? ''} onChange={(event) => setDrafts((current) => ({ ...current, [`workspace-${workspace.id}`]: event.target.value }))} placeholder="What did the student do well? What should they try next?"/><button className="button compact" onClick={() => void saveWorkspaceReview(workspace)}>Share Feedback</button></div>
       </article>)}
-      {!visibleWorkspaces.length && <div className="empty"><Save/><h2>No saved work yet</h2><p>When students press Save code inside an exercise, their work appears here.</p></div>}
+      {!visibleWorkspaces.length && <div className="empty"><Save/><h2>No saved drafts yet</h2><p>Students’ work will appear here after they select Save Code in an activity.</p></div>}
     </div> : <div className="submission-list">
       {visibleAttempts.map((attempt) => <article className="submission" key={attempt.id}>
-        <div className="submission-head"><div className="avatar"><Code2/></div><div><h2>{attempt.cs_activities?.title}</h2><p>{attempt.cs_profiles?.full_name || attempt.cs_profiles?.email} · Attempt {attempt.attempt_number}</p></div><strong className={attempt.status === 'passed' ? 'score passed' : 'score'}>{attempt.status === 'submitted' ? 'Awaiting review' : `${Number(attempt.score)} points`}</strong></div>
+        <div className="submission-head"><div className="avatar"><Code2/></div><div><h2>{attempt.cs_activities?.title}</h2><p>{attempt.cs_profiles?.full_name || attempt.cs_profiles?.email} · Attempt {attempt.attempt_number}</p></div><strong className={attempt.status === 'passed' ? 'score passed' : 'score'}>{attempt.status === 'submitted' ? 'Submitted' : `${Number(attempt.score)} points`}</strong></div>
         <pre>{attempt.code}</pre><footer>{attempt.status === 'passed' ? <CheckCircle2/> : <Clock/>}{attempt.status} · {new Date(attempt.submitted_at).toLocaleString()}</footer>
-        <div className="feedback-box"><label><MessageSquare size={17}/> Submission feedback</label><textarea value={drafts[`attempt-${attempt.id}`] ?? ''} onChange={(event) => setDrafts((current) => ({ ...current, [`attempt-${attempt.id}`]: event.target.value }))} placeholder="Name a strength and one useful next step…"/><button className="button compact" onClick={() => void saveSubmissionFeedback(attempt)}>Save feedback</button></div>
+        <div className="feedback-box"><label><MessageSquare size={17}/> Feedback on this submission</label><textarea value={drafts[`attempt-${attempt.id}`] ?? ''} onChange={(event) => setDrafts((current) => ({ ...current, [`attempt-${attempt.id}`]: event.target.value }))} placeholder="What did the student do well? What should they try next?"/><button className="button compact" onClick={() => void saveSubmissionFeedback(attempt)}>Share Feedback</button></div>
       </article>)}
-      {!visibleAttempts.length && <div className="empty"><Code2/><h2>No submissions yet</h2><p>Final attempts appear here after students press Submit.</p></div>}
+      {!visibleAttempts.length && <div className="empty"><Code2/><h2>No submissions yet</h2><p>Student work will appear here after they select Submit.</p></div>}
     </div>}
   </main>
 }
