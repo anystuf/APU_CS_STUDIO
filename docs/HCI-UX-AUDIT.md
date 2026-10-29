@@ -21,6 +21,14 @@ Scores reflect the inspected workflows and source, not all possible users.
 | Help / learnability | 4 | No persistent classroom guide explaining exactly where to save, submit, or review. |
 | Visual hierarchy / scanning | 7 | Existing restrained green palette, card grouping and status badges are useful. Long titles and authoring controls overwhelm the outline. |
 
+## Post-change inspection rating: 7.6 / 10 (provisional)
+
+Using the same dimensions: navigation 8, status 8, prevention/recovery 8,
+consistency 8, accessibility 6, responsive behavior 7, help 8, visual hierarchy 8.
+Mean = 61 / 8 = 7.625, rounded to 7.6. The accessibility and reflow ratings remain
+limited by the manual-test coverage below. This is an expert estimate of the
+inspected release, not a measured SUS score or proof of standards conformance.
+
 ## Evaluation targets and scope
 
 - **Nielsen's 10 usability heuristics:** visibility, familiar language, control,
@@ -100,6 +108,36 @@ Browser acceptance checklist (record actual results before claiming coverage):
 - No student submissions, grades or publication settings are changed for a
   visual test. Network failure/reconnect, assistive technology and Safari are
   separately tracked when not exercised.
+
+### Browser results collected
+
+Chrome, authenticated teacher/admin session, October 29, 2026:
+
+| Check | Result |
+|---|---|
+| Desktop navigation at 1309 CSS px inner width | All seven destinations visible; measured nav-link and sign-out target heights 44 px; no document overflow. |
+| Narrow activity manager at 320 CSS px inner width | Document client/scroll width both 306 px (scrollbar consumes remaining space); no horizontal page scroll; assignment actions wrap and are 50–51 px high. |
+| Narrow assessment list and expanded Help menu | Client/scroll width both 306 px; menu stays in normal flow and every destination is exposed. |
+| Menu Escape | Closes from a navigation link and from the toggle itself; focus returns to Menu. |
+| Skip link | Enter focuses main-content without changing the application route. |
+| Route orientation | Dashboard, course list, asynchronously loaded course/activity, assessment list and Help show page-specific titles and heading focus. |
+| Course search | No-match query produces clear empty state; Clear filters restores the course. |
+| Assessment status | Draft filter shows 1 of the 5 visible assessments; filter does not change publication status. |
+| Recently added activity | Daily Budget activity loads with settings, starter preview and six teacher tests available. No save/publication operation used for this audit. |
+| Help | Save-versus-submit and teacher workflow guide accessible from header and footer. |
+| Python IDE | At 320 CSS px, client/scroll width both 306 px; at 1309 CSS px both 1295 px. Full desktop header remains visible after lazy IDE styles load. Escape then Tab moves focus out of CodeMirror to the assignment link without editing code. |
+
+During testing, replacing release assets reproduced an expired dynamic-import
+failure in an old tab. Reload recovered the page. The new boundary's runtime
+failure path was code-reviewed but was not deliberately fault-injected in the
+production account. Offline/reconnect behavior, actual 200%/400% browser zoom,
+NVDA/VoiceOver, Safari and the authenticated student workflow were not manually
+exercised in this pass. Narrow-width tests are not substitutes for these checks.
+
+Deployment: GitHub Pages workflow for source commit `2b5a286` completed
+successfully, including lint, all 32 regression tests and production build.
+The final deployed release was reloaded and its assessment/IDE entry points
+verified. No actual grade, submission, roster or publication changes were made.
 
 ## What is still needed for U.S. institutional readiness
 
