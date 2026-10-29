@@ -69,6 +69,9 @@ Scores reflect the inspected workflows and source, not all possible users.
 9. Offline notice describes the limits of cloud saving without claiming that
    navigator.onLine proves the server is reachable. Save confirmations still
    come from each existing request's result.
+10. A root error boundary replaces blank screens from failed page rendering or
+    expired lazy-loaded assets with an explicit reload/recovery screen. Reload
+    requires user action and warns about unsaved edits; no automatic reload.
 
 ## Verification and release gates
 

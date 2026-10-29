@@ -11,6 +11,7 @@ import { TeacherCoursePage } from './pages/TeacherCoursePage'
 import { TeacherSubmissionsPage } from './pages/TeacherSubmissionsPage'
 import { UnauthorizedPage } from './pages/UnauthorizedPage'
 import { HelpPage } from './pages/HelpPage'
+import { AppErrorBoundary } from './components/AppErrorBoundary'
 const TeacherActivityManagerPage = lazy(() => import('./pages/TeacherActivityManagerPage').then(module => ({ default: module.TeacherActivityManagerPage })))
 const StudentWorkspacesPage = lazy(() => import('./pages/StudentWorkspacesPage').then(module => ({ default: module.StudentWorkspacesPage })))
 
@@ -24,7 +25,7 @@ const AssessmentReviewPage = lazy(() => import('./pages/AssessmentReviewPage').t
 const StudentAnswerReviewPage = lazy(() => import('./pages/StudentAnswerReviewPage').then(module => ({ default: module.StudentAnswerReviewPage })))
 
 export default function App() {
-  return <HashRouter><AuthProvider><Suspense fallback={<main className="center"><p>Loading classroom…</p></main>}><ClassroomRoutes/></Suspense></AuthProvider></HashRouter>
+  return <AppErrorBoundary><HashRouter><AuthProvider><Suspense fallback={<main className="center"><p role="status">Loading classroom…</p></main>}><ClassroomRoutes/></Suspense></AuthProvider></HashRouter></AppErrorBoundary>
 }
 
 function ClassroomRoutes() {
