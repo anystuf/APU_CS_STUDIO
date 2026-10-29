@@ -17,7 +17,7 @@ export function CurriculumSettings({ table, item, label, onSaved }: { table: 'cs
       const payload = { title: title.trim(), status, updated_at: new Date().toISOString(), ...(table === 'cs_lessons' ? { introduction: description, learning_objectives: objectives.split('\n').map(v => v.trim()).filter(Boolean) } : { description }), ...(table !== 'cs_courses' ? { position } : {}) }
       const result = await supabase.from(table).update(payload).eq('id', item.id).select('id').single()
       if (result.error) throw result.error
-      setMessage('Saved.'); await onSaved()
+      setMessage('Settings saved.'); await onSaved()
     } catch (error) { setMessage(managementError(error)) }
     finally { setBusy(false) }
   }
@@ -26,8 +26,8 @@ export function CurriculumSettings({ table, item, label, onSaved }: { table: 'cs
     <label className="field">{label} {table === 'cs_lessons' ? 'introduction' : 'description'}<textarea rows={4} value={description} onChange={e => setDescription(e.target.value)}/></label>
     {table === 'cs_lessons' && <label className="field">Learning objectives (one per line)<textarea rows={4} value={objectives} onChange={e => setObjectives(e.target.value)}/></label>}
     <label className="field">{label} status<select value={status} onChange={e => setStatus(e.target.value)}><option value="draft">Draft</option><option value="published">Published</option><option value="archived">Archived</option></select></label>
-    {table !== 'cs_courses' && <label className="field">{label} order<input type="number" min={0} step={1} required value={position} onChange={e => setPosition(Number(e.target.value))}/></label>}
-    <p>Draft/archived items and their nested activities are hidden from students. Student submissions are retained. Publish the course, module and lesson for students to access assigned work.</p>
+    {table !== 'cs_courses' && <label className="field">{label} display order<input type="number" min={0} step={1} required value={position} onChange={e => setPosition(Number(e.target.value))}/></label>}
+    <p>Draft and archived content is hidden from students. Publish the course, module, and lesson before students can open activities within them. Saved student work is preserved.</p>
     {message && <p role="status">{message}</p>}<button className="button" type="submit">{busy ? 'Saving…' : `Save ${label.toLowerCase()} settings`}</button>
   </fieldset></form></details>
 }
