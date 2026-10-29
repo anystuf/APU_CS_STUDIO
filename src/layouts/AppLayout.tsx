@@ -31,7 +31,7 @@ export function AppLayout() {
     }
     if (orient()) return
     const observer = new MutationObserver(() => { if (orient()) observer.disconnect() })
-    if (container) observer.observe(container, { childList: true, subtree: true })
+    if (container) observer.observe(container, { childList: true, characterData: true, subtree: true })
     return () => observer.disconnect()
   }, [pathname])
   const leave = async () => {
@@ -41,10 +41,10 @@ export function AppLayout() {
   }
   return <div className={`app-shell ${compact ? 'ide-app-shell' : ''}`}>
     <a className="skip-link" href="#main-content" onClick={event => { event.preventDefault(); content.current?.focus(); content.current?.scrollIntoView() }}>Skip to main content</a>
-    <header className="topbar">
+    <header className="topbar" onKeyDown={event => { if (event.key === 'Escape' && menuOpen) { setOpenPath(null); menu.current?.focus() } }}>
       <NavLink className="brand" to="/" aria-label={`${appConfig.appName} home`}>{appConfig.appName}</NavLink>
       <button ref={menu} className="icon-button navigation-toggle" aria-expanded={menuOpen} aria-controls="primary-navigation" onClick={() => setOpenPath(menuOpen ? null : pathname)}>{menuOpen ? <X size={20}/> : <Menu size={20}/>} {menuOpen ? 'Close menu' : 'Menu'}</button>
-      <nav id="primary-navigation" className={`classroom-nav ${menuOpen ? 'menu-open' : ''}`} aria-label="Main navigation" onKeyDown={event => { if (event.key === 'Escape') { setOpenPath(null); menu.current?.focus() } }} onClick={event => { if ((event.target as HTMLElement).closest('a')) setOpenPath(null) }}>
+      <nav id="primary-navigation" className={`classroom-nav ${menuOpen ? 'menu-open' : ''}`} aria-label="Main navigation" onClick={event => { const link = (event.target as HTMLElement).closest('a'); if (link) { setOpenPath(null); if (link.hash === window.location.hash) menu.current?.focus() } }}>
         <NavLink to={role === 'student' ? '/student' : '/teacher'}>Dashboard</NavLink><NavLink to="/assessments">Quiz & Code</NavLink><NavLink to="/python-ide">Python IDE</NavLink>
         {(role === 'teacher' || role === 'admin') && <><NavLink to="/teacher/courses">Courses & students</NavLink><NavLink to="/teacher/submissions">Student code</NavLink><NavLink to="/teacher/workspaces">Student workspaces</NavLink></>}
         <NavLink to="/help"><CircleHelp size={16} aria-hidden="true"/> Help</NavLink>
