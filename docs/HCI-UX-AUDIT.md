@@ -26,6 +26,10 @@ Scores reflect the inspected workflows and source, not all possible users.
 - **Nielsen's 10 usability heuristics:** visibility, familiar language, control,
   consistency, prevention, recognition, efficiency, minimalism, recovery, help.
   [Primary source](https://www.nngroup.com/articles/ten-usability-heuristics/).
+- **ISO 9241-11 usability framework:** effectiveness, efficiency and satisfaction
+  in a specified context of use. This pass is an inspection; task timings and
+  satisfaction scores require actual participants.
+  [ISO framework](https://committee.iso.org/standard/63500.html).
 - **WCAG 2.2 AA engineering target:** keyboard access, focus, labels, contrast,
   reflow, status feedback, and target size. AA's minimum target-size requirement
   is 24 CSS px subject to exceptions; this pass chooses a 44 px minimum for

@@ -45,7 +45,7 @@ export function AppLayout() {
       <NavLink className="brand" to="/" aria-label={`${appConfig.appName} home`}>{appConfig.appName}</NavLink>
       <button ref={menu} className="icon-button navigation-toggle" aria-expanded={menuOpen} aria-controls="primary-navigation" onClick={() => setOpenPath(menuOpen ? null : pathname)}>{menuOpen ? <X size={20}/> : <Menu size={20}/>} {menuOpen ? 'Close menu' : 'Menu'}</button>
       <nav id="primary-navigation" className={`classroom-nav ${menuOpen ? 'menu-open' : ''}`} aria-label="Main navigation" onClick={event => { const link = (event.target as HTMLElement).closest('a'); if (link) { setOpenPath(null); if (link.hash === window.location.hash) menu.current?.focus() } }}>
-        <NavLink to={role === 'student' ? '/student' : '/teacher'}>Dashboard</NavLink><NavLink to="/assessments">Quiz & Code</NavLink><NavLink to="/python-ide">Python IDE</NavLink>
+        <NavLink end to={role === 'student' ? '/student' : '/teacher'}>Dashboard</NavLink><NavLink to="/assessments">Quiz & Code</NavLink><NavLink to="/python-ide">Python IDE</NavLink>
         {(role === 'teacher' || role === 'admin') && <><NavLink to="/teacher/courses">Courses & students</NavLink><NavLink to="/teacher/submissions">Student code</NavLink><NavLink to="/teacher/workspaces">Student workspaces</NavLink></>}
         <NavLink to="/help"><CircleHelp size={16} aria-hidden="true"/> Help</NavLink>
       </nav>
