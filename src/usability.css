@@ -66,6 +66,27 @@ section, article, fieldset, .builder-grid > *, .two-column > *, .dashboard-actio
 .hero-card { padding: 28px; border-radius: 16px; margin-bottom: 28px; gap: 24px; }
 .hero-card h2 { font-size: 26px; }
 .help-link { display: inline-flex; align-items: center; min-height: 44px; color: var(--green); }
+.learning-instructions { max-width: 76ch; margin-block: 20px 28px; }
+.instruction-section { margin-block: 18px; padding: 18px 22px; background: white; border: 1px solid var(--line); border-radius: 12px; }
+.instruction-section h2 { font-size: 1.15rem; margin: 0 0 10px; font-family: 'Space Grotesk', sans-serif; }
+.instruction-section p { white-space: pre-wrap; overflow-wrap: anywhere; margin: 8px 0; line-height: 1.75; }
+.instruction-section ol { margin: 8px 0; padding-left: 24px; }
+.instruction-section li { padding-left: 4px; margin-block: 14px; white-space: pre-wrap; overflow-wrap: anywhere; line-height: 1.75; }
+.activity-submit-guide { max-width: 76ch; border-left: 4px solid var(--green); padding: 14px 20px; background: #e5f1e9; border-radius: 8px; }
+.activity-submit-guide p { margin: 6px 0; }
+.student-lesson { margin-block: 20px; }
+.student-lesson > h3 { font-size: 1.3rem; margin-top: 0; }
+.student-lesson h4 { margin: 20px 0 10px; font-size: 1rem; }
+.lesson-goals li { margin-block: 8px; }
+.lesson-overview { margin-block: 18px; border-block: 1px solid var(--line); }
+.lesson-overview summary { font-weight: 600; }
+.lesson-overview .learning-instructions { max-width: 76ch; }
+.student-task-list { list-style: none; padding: 0; margin: 0; }
+.student-task-list > li { display: flex; align-items: center; flex-wrap: wrap; gap: 12px; padding: 16px 0; border-bottom: 1px solid var(--line); }
+.student-task-list li > div { flex: 1 1 240px; min-width: 0; }
+.student-task-list li > div > a { font-weight: 700; color: var(--green); text-underline-offset: 3px; }
+.student-task-list p { margin: 5px 0 0; font-size: 13px; color: var(--muted); }
+.course-search { max-width: 600px; margin-block: 20px; }
 @media (max-width: 1199px) {
   .app-shell .topbar { position: static; flex-wrap: wrap; gap: 8px; padding: 10px 20px; }
   .app-shell .topbar .navigation-toggle { display: inline-flex; margin-left: auto; font-size: 14px; }
