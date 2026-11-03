@@ -3,32 +3,44 @@ export function displayActivityTitle(value: string) {
   return displayTitle(value).replace(/^(\d+\s*[·.]\s*)(?:CORE|CHALLENGE|STRETCH|LIVE CODING)\s*-\s*/i, '$1')
 }
 
-export type InstructionSection = { title: string; paragraphs: string[]; steps: string[] }
-/** Plain text only: explicit headings and numbered instructions, never HTML. */
+export type InstructionSection = { title: string; paragraphs: string[]; steps: string[]; markdown: string }
+/** Organize legacy prose without modifying literal input or Python examples. */
 export function instructionSections(text: string): InstructionSection[] {
   const sections: InstructionSection[] = []
-  let current: InstructionSection = { title: 'Your task', paragraphs: [], steps: [] }
+  const section = (title: string): InstructionSection => ({ title, paragraphs: [], steps: [], markdown: '' })
+  let current = section('Your task')
   let explicitHeading = false
-  const push = () => { if (current.paragraphs.length || current.steps.length) sections.push(current) }
+  let fence: string | null = null
+  const append = (line: string) => { current.markdown += `${line}\n` }
+  const push = () => { if (current.markdown.trim()) sections.push(current) }
   // Legacy teacher-authored text often has numbered steps flattened onto one line.
-  const lines = text.replace(/\s+(?=\d{1,2}\.\s+[A-Z])/g, '\n')
-    .replace(/\s+(?=(?:Submit your|Remember:|Textbook reference:|ESSENTIAL QUESTION:|TODAY:|FLOW:))/g, '\n').split(/\r?\n/)
+  // Never interpret numbers or # comments inside code as prose structure.
+  const lines = text.split(/(```[\s\S]*?```|~~~[\s\S]*?~~~|`[^`\n]*`)/g).map((part, index) => index % 2 ? part : part
+    .replace(/\s+(?=\d{1,2}\.\s+[A-Z])/g, '\n')
+    .replace(/\s+(?=(?:Submit your|Remember:|Textbook reference:|ESSENTIAL QUESTION:|TODAY:|FLOW:))/g, '\n')).join('').split(/\r?\n/)
   for (const raw of lines) {
     const line = raw.trim()
-    if (!line) continue
+    const boundary = line.match(/^(`{3,}|~{3,})/)
+    if (fence) {
+      append(raw)
+      if (boundary && boundary[1]![0] === fence[0] && boundary[1]!.length >= fence.length) fence = null
+      continue
+    }
+    if (boundary) { fence = boundary[1]!; append(raw); continue }
+    if (!line) { append(''); continue }
     const heading = line.match(/^#{1,3}\s+(.+)$/)
-    if (heading) { push(); current = { title: heading[1]!, paragraphs: [], steps: [] }; explicitHeading = true; continue }
+    if (heading) { push(); current = section(heading[1]!); explicitHeading = true; continue }
     const step = line.match(/^\d{1,2}\.\s+(.+)$/)
     if (step) {
-      if (!explicitHeading && current.title !== 'Steps' && !current.steps.length) { push(); current = { title: 'Steps', paragraphs: [], steps: [] } }
-      current.steps.push(step[1]!); continue
+      if (!explicitHeading && current.title !== 'Steps' && !current.steps.length) { push(); current = section('Steps') }
+      current.steps.push(step[1]!); append(raw); continue
     }
     const marker = line.match(/^(ESSENTIAL QUESTION|TODAY|FLOW|Textbook reference|Remember):\s*(.*)$/)
     if (marker) {
-      push(); explicitHeading = false; current = { title: ({ 'ESSENTIAL QUESTION': 'Essential question', TODAY: 'Today’s learning', FLOW: 'Lesson schedule', 'Textbook reference': 'Reference', Remember: 'Keep in mind' } as Record<string, string>)[marker[1]!] ?? marker[1]!, paragraphs: [marker[2]!], steps: [] }; continue
+      push(); explicitHeading = false; current = section(({ 'ESSENTIAL QUESTION': 'Essential question', TODAY: 'Today’s learning', FLOW: 'Lesson schedule', 'Textbook reference': 'Reference', Remember: 'Keep in mind' } as Record<string, string>)[marker[1]!] ?? marker[1]!); current.paragraphs.push(marker[2]!); append(marker[2]!); continue
     }
-    if (/^Submit your/.test(line)) { push(); current = { title: 'Before you submit', paragraphs: [line], steps: [] }; continue }
-    current.paragraphs.push(line)
+    if (/^Submit your/.test(line)) { push(); explicitHeading = false; current = section('Before you submit') }
+    current.paragraphs.push(line); append(raw)
   }
   push()
   return sections

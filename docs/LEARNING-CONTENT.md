@@ -34,4 +34,9 @@ These are authoring prompts, not automatic additions to existing assignments.
 Keep existing requirements and grading expectations intact. The renderer treats
 HTML and scripts as literal text. It also separates numbered instructions and
 known lesson labels in older flattened descriptions without rewriting answers.
+Bold emphasis (`**text**`), inline Python references (backticks), bullet lists,
+links and fenced code examples render as formatted content, not raw punctuation.
+Fenced examples preserve spaces, vertical bars and Python comments literally.
+Do not delete `|` from registration examples: it is part of the input format.
+Raw HTML is not enabled and unsafe link protocols are filtered by the renderer.
 No accessibility certification is implied by the content template.
