@@ -1,0 +1,45 @@
+/* Gemini handoff adapted to the current classroom flows. */
+.projector-toggle { white-space: nowrap; }
+.projector-toggle[aria-pressed="true"] { background: #dff3e9; color: #12533e; border: 1px solid #176b4d; }
+.projector-mode { --muted: #3e5147; }
+.projector-mode .learning-instructions, .projector-mode .lesson-summary, .projector-mode .activity-submit-guide { font-size: 1.25rem; line-height: 1.75; }
+.projector-mode .cm-editor { font-size: 24px !important; }
+.projector-mode .activity-output { font-size: 24px; }
+.activity-studio { width: min(1600px, calc(100% - 32px)); }
+.activity-studio .lab-heading { align-items: center; flex-wrap: wrap; }
+.activity-studio .lab-heading > div:first-child { flex: 1; min-width: min(100%, 300px); }
+.activity-studio h1 { font-size: clamp(1.65rem, 3vw, 2.25rem); overflow-wrap: anywhere; }
+.activity-split { display: grid; grid-template-columns: minmax(280px, .85fr) minmax(0, 1.3fr); gap: 20px; align-items: start; }
+.activity-instructions, .activity-workspace { min-width: 0; }
+.activity-instructions .learning-instructions { margin: 0; }
+.activity-workspace { display: grid; gap: 14px; }
+.activity-workspace .editor-pane { overflow: hidden; border-radius: 12px; border: 1px solid #34413a; }
+.activity-editor-toolbar, .activity-console > header { display: flex; align-items: center; justify-content: space-between; flex-wrap: wrap; gap: 12px; padding: 10px 14px; background: #18211c; color: #d8f7e5; }
+.activity-editor-toolbar strong, .activity-editor-toolbar > div { display: flex; align-items: center; flex-wrap: wrap; gap: 8px; }
+.activity-editor-toolbar small { font-weight: normal; }
+.activity-editor-toolbar button, .activity-terminal button { display: inline-flex; align-items: center; gap: 6px; border: 1px solid #617a6b; border-radius: 6px; background: #18211c; color: #e8f3ec; padding: 8px 12px; min-height: 44px; cursor: pointer; }
+.activity-console { background: #101713; color: #d8f7e5; border: 1px solid #34413a; border-radius: 12px; overflow: hidden; }
+.activity-console header span { font-size: .875rem; }
+.activity-output { padding: 18px; min-height: 220px; max-height: 60dvh; overflow: auto; font: 18px/1.6 monospace; }
+.activity-output pre { white-space: pre-wrap; overflow-wrap: anywhere; margin: 0; font: inherit; }
+.activity-terminal { display: flex; align-items: center; gap: 8px; margin-top: 12px; }
+.activity-terminal input { min-width: 0; width: 100%; border: 1px solid #779b87; border-radius: 6px; padding: 10px; background: #18211c; color: #fff; font: inherit; }
+.python-error { background: #381e1b; color: #ffd6ce; padding: 16px; border-radius: 8px; margin-top: 12px; }
+.python-error p, .python-error details { font: 1rem/1.6 'DM Sans', sans-serif; }
+.python-error summary { cursor: pointer; padding: 8px 0; }
+.test-diff { display: grid; grid-template-columns: repeat(2,minmax(0,1fr)); gap: 12px; }
+.test-diff pre { white-space: pre-wrap; overflow-wrap: anywhere; background: white; padding: 12px; border-radius: 6px; }
+.activity-pane-switch { display: none; }
+.review-status-filter { display: grid; gap: 4px; font-size: .875rem; font-weight: 700; }
+.review-status-filter select { padding: 10px; border: 1px solid #9fb5a8; border-radius: 8px; background: white; min-height: 44px; }
+.quick-feedback { display: flex; flex-wrap: wrap; gap: 8px; margin: 8px 0; }
+.quick-feedback button { border: 1px solid #9fb5a8; border-radius: 20px; padding: 10px 14px; background: #f5f8f5; color: #174d39; text-align: left; cursor: pointer; min-height: 44px; }
+@media (max-width: 1000px) {
+ .activity-split { grid-template-columns: minmax(0,1fr); }
+ .activity-pane-switch { display: flex; flex-wrap: wrap; gap: 8px; margin: 16px 0; }
+ .activity-pane-switch button { flex: 1; padding: 12px; border: 1px solid #176b4d; border-radius: 8px; background: white; color: #176b4d; font: inherit; font-weight: 700; cursor: pointer; }
+ .activity-pane-switch button[aria-pressed="true"] { background: #176b4d; color: white; }
+ .show-workspace .activity-instructions, .show-instructions .activity-workspace { display: none; }
+ .test-diff { grid-template-columns: minmax(0,1fr); }
+}
+@media (max-width: 600px) { .activity-editor-toolbar small { display: none; } .activity-studio .heading-actions { width: 100%; flex-wrap: wrap; } .projector-toggle { font-size: 12px; } }

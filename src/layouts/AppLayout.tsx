@@ -1,5 +1,5 @@
 import { useEffect, useRef, useState } from 'react'
-import { CircleHelp, LogOut, Menu, WifiOff, X } from 'lucide-react'
+import { CircleHelp, Monitor, LogOut, Menu, WifiOff, X } from 'lucide-react'
 import { Link, NavLink, Outlet, useLocation } from 'react-router-dom'
 import { appConfig } from '../config/app'
 import { useAuth } from '../features/auth/AuthProvider'
@@ -10,6 +10,8 @@ export function AppLayout() {
   const compact = pathname === '/python-ide'
   const [openPath, setOpenPath] = useState<string | null>(null)
   const menuOpen = openPath === pathname
+  const [projector, setProjector] = useState(() => { try { return localStorage.getItem('apu-projector-mode') === 'true' } catch { return false } })
+  const toggleProjector = () => { const next = !projector; setProjector(next); try { localStorage.setItem('apu-projector-mode', String(next)) } catch { /* Optional preference */ } }
   const [online, setOnline] = useState(() => navigator.onLine)
   const [signingOut, setSigningOut] = useState(false)
   const [error, setError] = useState('')
@@ -39,7 +41,7 @@ export function AppLayout() {
     try { await signOut() } catch { setError('Could not sign out. Check your connection and try again.') }
     finally { setSigningOut(false) }
   }
-  return <div className={`app-shell ${compact ? 'ide-app-shell' : ''}`}>
+  return <div className={`app-shell ${compact ? 'ide-app-shell' : ''} ${projector ? 'projector-mode' : ''}`}>
     <a className="skip-link" href="#main-content" onClick={event => { event.preventDefault(); content.current?.focus(); content.current?.scrollIntoView() }}>Skip to main content</a>
     <header className="topbar" onKeyDown={event => { if (event.key === 'Escape' && menuOpen) { setOpenPath(null); menu.current?.focus() } }}>
       <NavLink className="brand" to="/" aria-label={`${appConfig.appName} home`}>{appConfig.appName}</NavLink>
@@ -49,6 +51,7 @@ export function AppLayout() {
         {(role === 'teacher' || role === 'admin') && <><NavLink to="/teacher/courses">Courses & students</NavLink><NavLink to="/teacher/submissions">Student code</NavLink><NavLink to="/teacher/workspaces">Student workspaces</NavLink></>}
         <NavLink to="/help"><CircleHelp size={16} aria-hidden="true"/> Help</NavLink>
       </nav>
+      <button type="button" className="icon-button projector-toggle" aria-pressed={projector} onClick={toggleProjector}><Monitor size={18} aria-hidden="true"/> {projector ? 'Projector on' : 'Projector'}</button>
       <button className="icon-button sign-out" disabled={signingOut} onClick={() => void leave()}><LogOut size={18} aria-hidden="true"/> {signingOut ? 'Signing out…' : 'Sign out'}</button>
     </header>
     {!online && <div className="connection-notice" role="status"><WifiOff size={18} aria-hidden="true"/> You’re offline. Cloud saves and submissions need a connection. Keep this tab open and check the save status when you reconnect.</div>}
