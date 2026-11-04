@@ -1,4 +1,4 @@
-export function displayTitle(value: string) { return value.replace(/—/g, '-') }
+export function displayTitle(value: string) { return value.replace(/\u2014/g, '-') }
 export function displayActivityTitle(value: string) {
   return displayTitle(value).replace(/^(\d+\s*[·.]\s*)(?:CORE|CHALLENGE|STRETCH|LIVE CODING)\s*-\s*/i, '$1')
 }
@@ -52,5 +52,5 @@ export function activityRequirement(required: boolean | undefined) {
 
 export function instructionTime(text: string) { return text.match(/\(target:\s*([^)]*)\)/i)?.[1] ?? null }
 export function instructionBody(text: string) {
-  return text.replace(/^(?:CORE|CHALLENGE|STRETCH)\s*[—-]\s*(?:REQUIRED|OPTIONAL)\s*\(target:[^)]*\)\s*/i, '')
+  return text.replace(/^(?:CORE|CHALLENGE|STRETCH)\s*[\u2014-]\s*(?:REQUIRED|OPTIONAL)\s*\(target:[^)]*\)\s*/i, '')
 }

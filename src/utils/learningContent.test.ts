@@ -21,11 +21,11 @@ describe('student content presentation', () => {
     expect(activityRequirement(true)).toBe('Required')
     expect(activityRequirement(false)).toBe('Extension')
     expect(activityRequirement(undefined)).toBe('Activity')
-    expect(displayTitle('CORE — Clean names')).toBe('CORE - Clean names')
+    expect(displayTitle('CORE \u2014 Clean names')).toBe('CORE - Clean names')
   })
   it('retains authored numbered success criteria and separates time metadata', () => {
     expect(instructionSections('## Success criteria\n1. Keep duplicates.\n2. Preserve order.')[0]).toMatchObject({ title: 'Success criteria', steps: ['Keep duplicates.', 'Preserve order.'] })
-    const text = 'CORE — REQUIRED (target: 8–10 minutes) Clean every entry.'
+    const text = 'CORE \u2014 REQUIRED (target: 8–10 minutes) Clean every entry.'
     expect(instructionTime(text)).toBe('8–10 minutes')
     expect(instructionBody(text)).toBe('Clean every entry.')
     expect(instructionBody('CORE logic must remain unchanged.')).toBe('CORE logic must remain unchanged.')

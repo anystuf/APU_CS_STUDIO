@@ -1,3 +1,4 @@
+import { displayTitle } from '../utils/learningContent'
 import { useEffect, useState } from 'react'
 import { Link, useParams } from 'react-router-dom'
 import { ArrowLeft, CheckCircle2, LockKeyhole } from 'lucide-react'
@@ -64,7 +65,7 @@ export function StudentAnswerReviewPage() {
       </div></section>
       {review.questions?.map(q => <section className="panel assessment-question" key={q.id}>
         <div className="question-header"><h2>Question {q.number}</h2><strong>{q.points} points</strong></div>
-        <p className="question-prompt" style={{ whiteSpace: 'pre-wrap' }}>{q.prompt}</p>
+        <p className="question-prompt" style={{ whiteSpace: 'pre-wrap' }}>{displayTitle(q.prompt)}</p>
         {q.kind === 'multiple_choice' ? <>
           <p><strong>Your answer:</strong> {q.student_choice === null ? 'Not answered' : q.options[q.student_choice]}</p>
           <p><strong>Correct answer:</strong> {q.correct_choice === null ? 'Not available' : q.options[q.correct_choice]}</p>

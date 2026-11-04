@@ -43,7 +43,7 @@ export function MidtermImport({ courseId, courseTitle, onImported }: { courseId:
     {busy && <p role="status">Checking or importing practice…</p>}
     {error && <p className="alert" role="alert">{error}</p>}
     {pack && <section aria-label="Import confirmation summary"><p>Validated all {pack.mcqCount} multiple-choice questions and keys in the file. Monday’s uploaded questions are not imported.</p>
-      <ul>{preview.map(item => <li key={item.day}><strong>{item.title}</strong> — {item.action}{item.status ? ` (${item.status})` : ''}</li>)}</ul>
+      <ul>{preview.map(item => <li key={item.day}><strong>{item.title}</strong> - {item.action}{item.status ? ` (${item.status})` : ''}</li>)}</ul>
       <p>Tuesday: 14 multiple-choice questions + 1 required Python task = 100 points (70 + 30). Wednesday: 6 multiple-choice questions = 30 points + 1 optional Python task worth zero points. Wednesday is optional practice, separate from the official midterm.</p>
       {!results.length && <button className="button" type="button" disabled={busy} onClick={() => void importFile()}>Confirm import Tuesday &amp; Wednesday as drafts</button>}
     </section>}

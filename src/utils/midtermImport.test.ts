@@ -6,8 +6,8 @@ function fixture() {
   const quiz = (prefix: string, count: number) => Array.from({ length: count }, (_, i) => ({ id: `${prefix}-${i}`, kind: 'multiple_choice', prompt: 'Synthetic test question', options: ['One', 'Two', 'Three', 'Four'], points: 5, required: true, answer_key_letter: String.fromCharCode(65 + i % 4), teacher_expected: 'PRIVATE TEST NOTE' }))
   return { target_course_id: IMPORT_COURSE_ID, target_course: IMPORT_COURSE_TITLE, status: 'draft', days: {
     monday: { title: 'Monday', quiz: quiz('m', 10) },
-    tuesday: { title: 'Tuesday — 40-minute Mock Midterm', quiz: quiz('t', 14), coding_question: { id: 't-code', kind: 'python', prompt: 'Synthetic coding task', starter_code: '# Start', points: 30, required: true, teacher_expected: { synthetic_total: 123456789 }, manual_rubric: { algorithm: 30 } } },
-    wednesday: { title: 'Wednesday — Optional Warm-Up', quiz: quiz('w', 6), coding_question: { id: 'w-code', kind: 'python', prompt: 'Optional test task', starter_code: '# Start', points: 0, required: false, teacher_expected: { synthetic_total: 987654321 } } },
+    tuesday: { title: 'Tuesday - 40-minute Mock Midterm', quiz: quiz('t', 14), coding_question: { id: 't-code', kind: 'python', prompt: 'Synthetic coding task', starter_code: '# Start', points: 30, required: true, teacher_expected: { synthetic_total: 123456789 }, manual_rubric: { algorithm: 30 } } },
+    wednesday: { title: 'Wednesday - Optional Warm-Up', quiz: quiz('w', 6), coding_question: { id: 'w-code', kind: 'python', prompt: 'Optional test task', starter_code: '# Start', points: 0, required: false, teacher_expected: { synthetic_total: 987654321 } } },
   } }
 }
 describe('teacher midterm JSON import validation', () => {
@@ -18,6 +18,18 @@ describe('teacher midterm JSON import validation', () => {
     expect(pack.days[0]!.questions.reduce((sum, q) => sum + q.points, 0)).toBe(100)
     expect(pack.days[0]!.keys['t-3']).toBe(3)
     expect(pack.days[1]!.questions.at(-1)).toMatchObject({ kind: 'python', required: false, points: 0 })
+  })
+  it('accepts legacy em-dash titles while importing hyphenated prose and preserving starter code', () => {
+    const source = fixture()
+    source.target_course = source.target_course.replace(' - ', ' \u2014 ')
+    source.days.tuesday.title = 'Tuesday \u2014 40-minute Mock Midterm'
+    source.days.wednesday.title = 'Wednesday \u2014 Optional Warm-Up'
+    source.days.tuesday.coding_question.prompt = 'BUILD \u2014 Explain your solution'
+    source.days.tuesday.coding_question.starter_code = '# Keep \u2014 code unchanged'
+    const pack = parseMidtermImport(source, IMPORT_COURSE_ID)
+    expect(pack.days[0]?.lessonTitle).toBe('Tuesday - 40-minute Mock Midterm')
+    expect(pack.days[0]?.questions.at(-1)?.prompt).toBe('BUILD - Explain your solution')
+    expect(pack.days[0]?.questions.at(-1)?.starter_code).toBe('# Keep \u2014 code unchanged')
   })
   it('strips private and unexpected fields from student-readable questions, preserving protected notes separately', () => {
     const pack = parseMidtermImport(fixture(), IMPORT_COURSE_ID)

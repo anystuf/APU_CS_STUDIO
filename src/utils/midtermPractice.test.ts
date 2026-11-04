@@ -10,7 +10,7 @@ describe('Monday midterm practice package', () => {
   })
 
   it('has required Quick Check, Trace, Debug, and Build plus a zero-point optional reflection', () => {
-    expect(MIDTERM_LESSON_TITLE).toBe('Monday — Python Exam Readiness')
+    expect(MIDTERM_LESSON_TITLE).toBe('Monday - Python Exam Readiness')
     expect(MIDTERM_QUESTIONS.filter(question => question.required !== false)).toHaveLength(9)
     const reflection = MIDTERM_QUESTIONS.find(question => question.id === 'midterm-reflection')!
     expect(reflection.required).toBe(false)
@@ -20,11 +20,11 @@ describe('Monday midterm practice package', () => {
   it('provides the five optional coding activities and one function challenge', () => {
     expect(OPTIONAL_MIDTERM_PRACTICE).toHaveLength(6)
     expect(OPTIONAL_MIDTERM_PRACTICE.slice(0, 5).map(activity => activity.title)).toEqual([
-      'Practice 1 — Study Hours',
-      'Practice 2 — range()',
-      'Practice 3 — Countdown',
-      'Practice 4 — Counter and Accumulator',
-      'Practice 5 — Running Largest',
+      'Practice 1 - Study Hours',
+      'Practice 2 - range()',
+      'Practice 3 - Countdown',
+      'Practice 4 - Counter and Accumulator',
+      'Practice 5 - Running Largest',
     ])
     expect(OPTIONAL_MIDTERM_PRACTICE.every(activity => !('expected_output' in activity))).toBe(true)
   })

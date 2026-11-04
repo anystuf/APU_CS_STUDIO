@@ -1,10 +1,11 @@
 import { supabase } from '../lib/supabase/client'
 import type { AssessmentQuestion } from '../types/assessment'
+import { displayTitle } from './learningContent'
 import { validateQuestions } from './assessment'
 import { MIDTERM_ASSESSMENT_TITLE, MIDTERM_LESSON_TITLE, MIDTERM_MODULE_TITLE } from './midtermPractice'
 
 export const IMPORT_COURSE_ID = 'ac79bd77-11c1-4bb0-bcfc-21bef4484785'
-export const IMPORT_COURSE_TITLE = 'Computer Science Foundations — High School (Grades 11–12)'
+export const IMPORT_COURSE_TITLE = 'Computer Science Foundations - High School (Grades 11–12)'
 type Row = Record<string, unknown>
 type Day = 'tuesday' | 'wednesday'
 export type ImportDay = {
@@ -34,7 +35,7 @@ function same(a: unknown, b: unknown): boolean {
 /** Only explicit student-safe fields survive this conversion. Never spread uploaded questions. */
 export function parseMidtermImport(value: unknown, courseId: string): ImportPackage {
   const root = object(value, 'File')
-  if (courseId !== IMPORT_COURSE_ID || root.target_course_id !== courseId || root.target_course !== IMPORT_COURSE_TITLE) throw new Error('This file belongs to the existing High School (Grades 11–12) course.')
+  if (courseId !== IMPORT_COURSE_ID || root.target_course_id !== courseId || (typeof root.target_course !== 'string' || displayTitle(root.target_course) !== IMPORT_COURSE_TITLE)) throw new Error('This file belongs to the existing High School (Grades 11–12) course.')
   if (root.status !== 'draft') throw new Error('The import file must specify draft status.')
   const sourceDays = object(root.days, 'Days'); const days: ImportDay[] = []
   let mcqCount = 0
@@ -51,7 +52,7 @@ export function parseMidtermImport(value: unknown, courseId: string): ImportPack
       const letter = text(q.answer_key_letter, `${id} answer key`, 1)
       if (!/^[A-D]$/.test(letter)) throw new Error(`${id}: answer key must be A, B, C, or D.`)
       keys[id] = letter.charCodeAt(0) - 65
-      return { id, kind: 'multiple_choice', prompt: text(q.prompt, `${id} prompt`), options: q.options.map(v => text(v, `${id} option`, 2000)), points: 5, required: true }
+      return { id, kind: 'multiple_choice', prompt: displayTitle(text(q.prompt, `${id} prompt`)), options: q.options.map(v => displayTitle(text(v, `${id} option`, 2000))), points: 5, required: true }
     })
     mcqCount += count
     const feedback: Row = {}
@@ -70,13 +71,13 @@ export function parseMidtermImport(value: unknown, courseId: string): ImportPack
         privateNotes.manual_rubric = rubric
       }
       feedback[id] = privateNotes
-      questions.push({ id, kind: 'python', prompt: text(q.prompt, `${id} prompt`), starter_code: text(q.starter_code, `${id} starter code`), points, required })
-      days.push({ day, lessonTitle: text(source.title, `${day} lesson title`, 160), assessmentTitle: day === 'tuesday' ? 'Tuesday Mock Midterm — October 13, 2026' : 'Wednesday Optional Warm-Up — October 14, 2026', instructions: day === 'tuesday' ? 'Formative practice only. Allow 40 minutes. Complete 14 multiple-choice questions (70 points) and the Python programming task (30 points). This is not the official midterm examination.' : 'OPTIONAL formative warm-up. This is not part of the official midterm examination. Complete the six quiz questions if you choose to participate. The Python task is optional and worth zero points.', questions, keys, feedback })
+      questions.push({ id, kind: 'python', prompt: displayTitle(text(q.prompt, `${id} prompt`)), starter_code: text(q.starter_code, `${id} starter code`), points, required })
+      days.push({ day, lessonTitle: displayTitle(text(source.title, `${day} lesson title`, 160)), assessmentTitle: day === 'tuesday' ? 'Tuesday Mock Midterm - October 13, 2026' : 'Wednesday Optional Warm-Up - October 14, 2026', instructions: day === 'tuesday' ? 'Formative practice only. Allow 40 minutes. Complete 14 multiple-choice questions (70 points) and the Python programming task (30 points). This is not the official midterm examination.' : 'OPTIONAL formative warm-up. This is not part of the official midterm examination. Complete the six quiz questions if you choose to participate. The Python task is optional and worth zero points.', questions, keys, feedback })
     }
     const problem = validateQuestions(questions, keys)
     if (problem) throw new Error(`${day}: ${problem}`)
   }
-  if (days[0]?.lessonTitle !== 'Tuesday — 40-minute Mock Midterm' || days[1]?.lessonTitle !== 'Wednesday — Optional Warm-Up') throw new Error('Tuesday/Wednesday lesson titles do not match the practice package.')
+  if (days[0]?.lessonTitle !== 'Tuesday - 40-minute Mock Midterm' || days[1]?.lessonTitle !== 'Wednesday - Optional Warm-Up') throw new Error('Tuesday/Wednesday lesson titles do not match the practice package.')
   return { days, mcqCount }
 }
 
@@ -125,7 +126,7 @@ async function inspect(courseId: string, pack: ImportPackage) {
 }
 export async function previewMidtermImport(courseId: string, pack: ImportPackage): Promise<ImportPreview[]> {
   const current = await inspect(courseId, pack)
-  return [{ day: 'monday', title: MIDTERM_LESSON_TITLE, action: 'Already installed — preserve assessment and six activities', assessmentId: String(current.monday.id), status: String(current.monday.status) }, ...current.rows.map(row => ({ day: row.day.day, title: row.day.lessonTitle, action: row.assessment && row.lesson ? 'Already installed — verify and reuse' : row.assessment ? 'Reuse matching assessment; complete lesson link' : 'Create lesson and draft assessment', assessmentId: row.assessment ? String(row.assessment.id) : undefined, status: row.assessment ? String(row.assessment.status) : 'draft' }))]
+  return [{ day: 'monday', title: MIDTERM_LESSON_TITLE, action: 'Already installed - preserve assessment and six activities', assessmentId: String(current.monday.id), status: String(current.monday.status) }, ...current.rows.map(row => ({ day: row.day.day, title: row.day.lessonTitle, action: row.assessment && row.lesson ? 'Already installed - verify and reuse' : row.assessment ? 'Reuse matching assessment; complete lesson link' : 'Create lesson and draft assessment', assessmentId: row.assessment ? String(row.assessment.id) : undefined, status: row.assessment ? String(row.assessment.status) : 'draft' }))]
 }
 /** Uses only the caller's browser session. Partial imports resume without overwriting existing records. */
 export async function importMidtermPractice(courseId: string, pack: ImportPackage): Promise<ImportPreview[]> {
@@ -134,7 +135,7 @@ export async function importMidtermPractice(courseId: string, pack: ImportPackag
   const positions = await supabase.from('cs_lessons').select('position').eq('module_id', moduleId)
   check(positions, 'Read lesson positions')
   let position = Math.max(-1, ...(positions.data ?? []).map(row => Number(row.position))) + 1
-  const results: ImportPreview[] = [{ day: 'monday', title: MIDTERM_LESSON_TITLE, action: 'Already installed — preserved', assessmentId: String(current.monday.id), status: String(current.monday.status) }]
+  const results: ImportPreview[] = [{ day: 'monday', title: MIDTERM_LESSON_TITLE, action: 'Already installed - preserved', assessmentId: String(current.monday.id), status: String(current.monday.status) }]
   for (const row of current.rows) {
     let assessment = row.assessment
     if (!assessment) {
@@ -153,7 +154,7 @@ export async function importMidtermPractice(courseId: string, pack: ImportPackag
       const created = await supabase.from('cs_lessons').insert({ module_id: moduleId, title: row.day.lessonTitle, introduction: row.day.instructions, learning_objectives: ['Practise Python variables, conditions, loops, lists, and functions.'], vocabulary: [], position: position++, status: 'published', assessment_id: id }).select('id').single()
       check(created, `Link ${row.day.lessonTitle}`)
     }
-    results.push({ day: row.day.day, title: row.day.assessmentTitle, action: row.assessment && row.lesson ? 'Already installed — preserved' : 'Imported — review before assigning', assessmentId: id, status: String(assessment.status) })
+    results.push({ day: row.day.day, title: row.day.assessmentTitle, action: row.assessment && row.lesson ? 'Already installed - preserved' : 'Imported - review before assigning', assessmentId: id, status: String(assessment.status) })
   }
   await previewMidtermImport(courseId, pack)
   return results

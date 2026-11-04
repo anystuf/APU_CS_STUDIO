@@ -1,3 +1,4 @@
+import { displayTitle } from '../utils/learningContent'
 import { useMemo, useState } from 'react'
 import { Download } from 'lucide-react'
 import type { Assessment, AssessmentSubmission, AssessmentQuestion } from '../types/assessment'
@@ -138,13 +139,13 @@ export function TeacherQuestionAnalysis({ assessment, submissions, keys, explana
       <div className="qa-scroll"><table className="qa-table"><thead><tr>
         <th>Question</th><th>Topic / prompt</th><th>Correct</th><th>Wrong</th><th>Accuracy</th>
       </tr></thead><tbody>{stats.map(x=><tr key={x.q.id}>
-        <td>Q{x.index}</td><td>{summary(x.q.prompt)}</td><td>{x.correct}/{x.attempted}</td><td>{x.wrong}</td>
-        <td>{x.attempted?Math.round(x.correct/x.attempted*100)+'%':'—'}</td>
+        <td>Q{x.index}</td><td>{summary(displayTitle(x.q.prompt))}</td><td>{x.correct}/{x.attempted}</td><td>{x.wrong}</td>
+        <td>{x.attempted?Math.round(x.correct/x.attempted*100)+'%':'-'}</td>
       </tr>)}</tbody></table></div>
       <h3>{mistakesOnly?'Incorrect answers':'All multiple-choice answers'}</h3>
       {details.length?<div className="qa-details">{details.map(x=><article className="qa-item" key={x.submissionId+':'+x.question.id}>
         <h4>{x.student} · Q{x.number} <span className={x.choice===x.correct?'qa-ok':'qa-incorrect'}>{x.choice===x.correct?'Correct':'Incorrect'}</span></h4>
-        <p>{summary(x.question.prompt)}</p>
+        <p>{summary(displayTitle(x.question.prompt))}</p>
         <p><strong>Student selected: </strong>{answerLabel(x.question.options,x.choice)}</p>
         <p><strong>Correct answer: </strong>{answerLabel(x.question.options,x.correct)}</p>
         <p><strong>Explanation: </strong>{x.explanation}</p>

@@ -109,7 +109,7 @@ export function TeacherActivityManagerPage() {
       <button className="button" type="submit">{busy ? 'Saving…' : 'Save Changes'}</button>
     </fieldset></form>}
     <section className="panel"><p className="eyebrow">{editing ? 'PREVIEWING UNSAVED CHANGES' : 'STUDENT-FACING PREVIEW'}</p><h2>{activity.title}</h2><LearningInstructions text={activity.instructions}/><p>{saved?.is_required ? 'Required' : 'Optional'} · {saved?.difficulty} · {saved?.max_score} points</p>{saved?.due_at && <p>Due: {new Date(saved.due_at).toLocaleString()}</p>}<pre className="review-code">{starter || '# No starter code provided'}</pre>
-      {!testError && <details><summary>Test cases — teacher view ({tests.length})</summary>{tests.map((test, i) => <section key={test.id}><h3>Test {i + 1} · {test.visibility}</h3><pre className="review-code">Input: {test.input || '(empty)'}{'\n'}Expected: {test.expected_output}</pre></section>)}</details>}
+      {!testError && <details><summary>Test cases - teacher view ({tests.length})</summary>{tests.map((test, i) => <section key={test.id}><h3>Test {i + 1} · {test.visibility}</h3><pre className="review-code">Input: {test.input || '(empty)'}{'\n'}Expected: {test.expected_output}</pre></section>)}</details>}
     </section><p><Link to={`/teacher/submissions?activity=${activity.id}`}>Review Student Work and Submissions →</Link></p>
   </main>
 }
