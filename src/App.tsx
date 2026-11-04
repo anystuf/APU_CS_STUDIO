@@ -11,6 +11,7 @@ import { TeacherCoursePage } from './pages/TeacherCoursePage'
 import { TeacherSubmissionsPage } from './pages/TeacherSubmissionsPage'
 import { UnauthorizedPage } from './pages/UnauthorizedPage'
 import { HelpPage } from './pages/HelpPage'
+import { SemesterDashboardPage } from './pages/SemesterDashboardPage'
 import { AppErrorBoundary } from './components/AppErrorBoundary'
 const TeacherActivityManagerPage = lazy(() => import('./pages/TeacherActivityManagerPage').then(module => ({ default: module.TeacherActivityManagerPage })))
 const StudentWorkspacesPage = lazy(() => import('./pages/StudentWorkspacesPage').then(module => ({ default: module.StudentWorkspacesPage })))
@@ -40,7 +41,8 @@ function ClassroomRoutes() {
       <Route path="assessments/:assessmentId/answers" element={<StudentAnswerReviewPage/>}/>
       <Route element={<ProtectedRoute roles={['student']}/>}><Route path="student" element={<StudentDashboard/>}/><Route path="student/course/:courseId" element={<StudentCoursePage/>}/><Route path="student/activity/:activityId" element={<PythonActivityPage/>}/></Route>
       <Route element={<ProtectedRoute roles={['teacher','admin']}/>}>
-        <Route path="teacher/workspaces" element={<StudentWorkspacesPage/>}/><Route path="teacher/activity/:activityId" element={<TeacherActivityManagerPage/>}/>
+        <Route path="teacher/workspaces" element={<StudentWorkspacesPage/>}/>
+        <Route path="teacher/semester" element={<SemesterDashboardPage/>}/><Route path="teacher/activity/:activityId" element={<TeacherActivityManagerPage/>}/>
         <Route path="assessments/new" element={<AssessmentBuilderPage/>}/>
         <Route path="assessments/:assessmentId/edit" element={<AssessmentBuilderPage/>}/>
         <Route path="assessments/:assessmentId/review" element={<AssessmentReviewPage/>}/>
