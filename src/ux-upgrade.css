@@ -43,3 +43,6 @@
  .test-diff { grid-template-columns: minmax(0,1fr); }
 }
 @media (max-width: 600px) { .activity-editor-toolbar small { display: none; } .activity-studio .heading-actions { width: 100%; flex-wrap: wrap; } .projector-toggle { font-size: 12px; } }
+/* Keep all desktop destinations visible after the semester link was added. */
+.app-shell .topbar .classroom-nav { flex-wrap: wrap; min-width: 0; }
+.app-shell .topbar .projector-toggle { flex-shrink: 0; margin-left: 0; font-size: 13px; }
