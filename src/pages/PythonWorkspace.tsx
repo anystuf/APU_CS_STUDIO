@@ -1,3 +1,4 @@
+import { TeachingInk } from '../components/TeachingInk'
 import { useCallback, useEffect, useRef, useState, type ChangeEvent, type CSSProperties } from 'react'
 import CodeMirror from '@uiw/react-codemirror'
 import { python } from '@codemirror/lang-python'
@@ -225,7 +226,7 @@ function Workspace({ userId }: { userId: string }) {
         {running ? <button className="dock-run danger" onClick={stopPython}><Square size={17}/>Stop</button> : <button className="dock-run" disabled={loading} aria-label={`Run ${active.name}`} onClick={() => void run()}><Play size={17}/>Run</button>}
       </div>
       <section className="editor-pane" aria-label="Python code editor">
-      <CodeMirror key={active.name} value={active.code} height="100%" extensions={[python()]} theme="dark" editable={!loading} basicSetup={{ lineNumbers: true, foldGutter: true }} onChange={code => edit({ files: draft.files.map(file => file.name === active.name ? { ...file, code } : file) })}/>
+      <TeachingInk key={`${active.name}-${fontSize}`}><CodeMirror key={active.name} value={active.code} height="100%" extensions={[python()]} theme="dark" editable={!loading} basicSetup={{ lineNumbers: true, foldGutter: true }} onChange={code => edit({ files: draft.files.map(file => file.name === active.name ? { ...file, code } : file) })}/></TeachingInk>
     </section><section className="console-pane" aria-label="Python output"><header><Terminal size={17}/>Output<button disabled={running} onClick={() => { setStdout(''); setStderr(''); setRunState('Ready to run') }}>Clear</button></header>
       <p className="run-state" role="status">{runState}</p>
       <div className="console-results" tabIndex={0} aria-label="Execution results">

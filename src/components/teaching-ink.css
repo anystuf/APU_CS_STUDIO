@@ -1,0 +1,13 @@
+.teaching-ink { display: flex; flex-direction: column; min-width: 0; min-height: 0; height: 100%; }
+.ink-toolbar { flex-shrink: 0; display: flex; align-items: center; flex-wrap: wrap; gap: 5px; padding: 6px 8px; background: #252b35; border-bottom: 1px solid #4e5768; color: #e4edf5; }
+.ink-toolbar button { display: inline-flex; align-items: center; justify-content: center; gap: 5px; min-height: 40px; min-width: 40px; padding: 6px 9px; background: #252b35; color: #e4edf5; border: 1px solid #657187; border-radius: 5px; cursor: pointer; font: 13px/1.2 sans-serif; }
+.ink-toolbar button[aria-pressed=true] { background: #35544a; border-color: #94e8bc; box-shadow: inset 0 0 0 1px #94e8bc; }
+.ink-toolbar button:disabled { opacity: .5; cursor: not-allowed; }
+.ink-color span { display: block; width: 19px; height: 19px; border-radius: 50%; border: 1px solid #fff9; }
+.ink-mode { font: 12px/1.4 sans-serif; color: #c0cbd8; }
+.ink-surface { position: relative; flex: 1; min-height: 0; min-width: 0; overflow: hidden; }
+.ink-surface > div { height: 100%; }
+.ink-overlay { position: absolute; inset: 0; width: 100%; height: 100%; z-index: 4; pointer-events: auto; touch-action: none; cursor: crosshair; }
+.ink-overlay.ink-edit { pointer-events: none; touch-action: auto; }
+.ink-overlay.ink-eraser { cursor: cell; }
+@media(max-width:600px) { .ink-toolbar { gap: 4px; } .ink-toolbar button { min-height: 44px; min-width: 44px; } .ink-mode { flex-basis: 100%; } }
