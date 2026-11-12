@@ -235,6 +235,6 @@ function Workspace({ userId }: { userId: string }) {
       {waitingInput && <form className="terminal-entry" onSubmit={event => { event.preventDefault(); inputResolver.current?.(terminalValue); inputResolver.current = null; setWaitingInput(false); setRunState('Running…') }}><span aria-hidden="true">›</span><input autoFocus aria-label="Terminal input" value={terminalValue} onChange={event => setTerminalValue(event.target.value)} autoComplete="off" spellCheck={false}/><button type="submit">Enter</button></form>}
       </div>
     </section></div></div>
-    <div className="workspace-help"><p>First run downloads Python. Runs stop after 30 seconds; packages requiring native system access are not supported. Your course teachers and platform administrators can review cloud-saved files. Saving here is not submitting an assignment.</p><Link className="text-link" to="/assessments">Open Quiz & Code to submit assigned work →</Link></div>
+    <div className="workspace-help"><p>Drag the bottom-right corner of the workspace to adjust its height.</p><p>First run downloads Python. Runs stop after 30 seconds; packages requiring native system access are not supported. Your course teachers and platform administrators can review cloud-saved files. Saving here is not submitting an assignment.</p><Link className="text-link" to="/assessments">Open Quiz & Code to submit assigned work →</Link></div>
   </main>
 }
