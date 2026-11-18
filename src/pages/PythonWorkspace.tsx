@@ -1,3 +1,4 @@
+import { useIdeTabState } from '../utils/useIdeTabState'
 import { TeachingInk } from '../components/TeachingInk'
 import { useCallback, useEffect, useRef, useState, type ChangeEvent, type CSSProperties } from 'react'
 import CodeMirror from '@uiw/react-codemirror'
@@ -12,11 +13,12 @@ import '../python-ide.css'
 import '../python-projector.css'
 
 export function PythonWorkspacePage() {
-  const { session } = useAuth()
-  return <Workspace key={session!.user.id} userId={session!.user.id}/>
+  const { session, role } = useAuth()
+  const teachingScope = role === 'teacher' || role === 'admin' ? session?.user.id : undefined
+  return <Workspace key={JSON.stringify([session!.user.id, teachingScope])} userId={session!.user.id} teachingScope={teachingScope}/>
 }
 
-function Workspace({ userId }: { userId: string }) {
+function Workspace({ userId, teachingScope }: { userId: string; teachingScope?: string }) {
   const key = `apu-python-workspace-${userId}`
   const [draft, setDraft] = useState<IdeDraft>(() => {
     try { return readDraft(localStorage.getItem(key)) ?? { files: initialFiles, activeFile: 'main.py', input: 'Student', revision: 0, dirty: false } }
@@ -29,12 +31,12 @@ function Workspace({ userId }: { userId: string }) {
   const [message, setMessage] = useState('')
   const [cloudTime, setCloudTime] = useState('')
   const [newName, setNewName] = useState('helpers.py')
-  const [stdout, setStdout] = useState('')
-  const [stderr, setStderr] = useState('')
-  const [runState, setRunState] = useState('Ready to run')
-  const [sidebarOpen, setSidebarOpen] = useState(() => window.innerWidth > 1100)
-  const [panel, setPanel] = useState<'code' | 'output'>('code')
-  const [fontSize, setFontSize] = useState(18)
+  const [stdout, setStdout] = useIdeTabState(teachingScope, 'stdout', '')
+  const [stderr, setStderr] = useIdeTabState(teachingScope, 'stderr', '')
+  const [runState, setRunState] = useIdeTabState(teachingScope, 'runState', 'Ready to run')
+  const [sidebarOpen, setSidebarOpen] = useIdeTabState(teachingScope, 'sidebarOpen', window.innerWidth > 1100)
+  const [panel, setPanel] = useIdeTabState<'code' | 'output'>(teachingScope, 'panel', 'code')
+  const [fontSize, setFontSize] = useIdeTabState(teachingScope, 'fontSize', 18)
   const [waitingInput, setWaitingInput] = useState(false)
   const [terminalValue, setTerminalValue] = useState('')
   const inputResolver = useRef<((value: string) => void) | null>(null)
@@ -192,7 +194,7 @@ function Workspace({ userId }: { userId: string }) {
       <div className="heading-actions"><button className="button secondary" disabled={loading || saving} onClick={() => void save()}><Save size={17}/>{saving ? 'Saving…' : 'Save to cloud'}</button>
       </div>
     </div>
-    <div className="workspace-status"><span>{loading ? 'Loading cloud workspace…' : draft.dirty ? 'Local draft · not yet saved to cloud' : cloudTime ? `Cloud saved · ${new Date(cloudTime).toLocaleString()}` : 'New workspace · save to cloud for other devices'} · Live sync between tabs in this browser</span><button disabled={loading || saving || running} onClick={() => void reloadCloud()}>Load cloud version</button></div>
+    <div className="workspace-status"><span>{loading ? 'Loading cloud workspace…' : draft.dirty ? 'Local draft · not yet saved to cloud' : cloudTime ? `Cloud saved · ${new Date(cloudTime).toLocaleString()}` : 'New workspace · save to cloud for other devices'} · {teachingScope ? 'Teaching view syncs between tabs in this browser' : 'Live code sync between tabs in this browser'}</span><button disabled={loading || saving || running} onClick={() => void reloadCloud()}>Load cloud version</button></div>
     {message && <p className="status" role="status">{message}</p>}
     <div className="workspace-grid"><aside id="python-files" className="workspace-files" aria-label="Python files" hidden={!sidebarOpen}>
       <h2><FileCode2 size={18}/> Files <small>{draft.files.length}/20</small></h2>
@@ -226,7 +228,7 @@ function Workspace({ userId }: { userId: string }) {
         {running ? <button className="dock-run danger" onClick={stopPython}><Square size={17}/>Stop</button> : <button className="dock-run" disabled={loading} aria-label={`Run ${active.name}`} onClick={() => void run()}><Play size={17}/>Run</button>}
       </div>
       <section className="editor-pane" aria-label="Python code editor">
-      <TeachingInk key={`${active.name}-${fontSize}`}><CodeMirror key={active.name} value={active.code} height="100%" extensions={[python()]} theme="dark" editable={!loading} basicSetup={{ lineNumbers: true, foldGutter: true }} onChange={code => edit({ files: draft.files.map(file => file.name === active.name ? { ...file, code } : file) })}/></TeachingInk>
+      <TeachingInk syncScope={teachingScope ? JSON.stringify([teachingScope, active.name, fontSize]) : undefined} key={`${active.name}-${fontSize}`}><CodeMirror key={active.name} value={active.code} height="100%" extensions={[python()]} theme="dark" editable={!loading} basicSetup={{ lineNumbers: true, foldGutter: true }} onChange={code => edit({ files: draft.files.map(file => file.name === active.name ? { ...file, code } : file) })}/></TeachingInk>
     </section><section className="console-pane" aria-label="Python output"><header><Terminal size={17}/>Output<button disabled={running} onClick={() => { setStdout(''); setStderr(''); setRunState('Ready to run') }}>Clear</button></header>
       <p className="run-state" role="status">{runState}</p>
       <div className="console-results" tabIndex={0} aria-label="Execution results">

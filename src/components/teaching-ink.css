@@ -13,3 +13,4 @@
 @media(max-width:600px) { .ink-toolbar { gap: 4px; } .ink-toolbar button { min-height: 44px; min-width: 44px; } .ink-mode { flex-basis: 100%; } }
 .ink-widths { display: inline-flex; gap: 4px; border-left: 1px solid #657187; padding-left: 5px; }
 .ink-widths button > span[aria-hidden] { width: 20px; background: currentColor; border-radius: 8px; }
+.ink-shared-pointer { position: absolute; pointer-events: none; z-index: 5; color: #65e3ff; filter: drop-shadow(0 1px 2px #000); }
