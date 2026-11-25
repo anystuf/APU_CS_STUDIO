@@ -1,4 +1,4 @@
-export function displayTitle(value: string) { return value.replace(/\u2014/g, '-') }
+export function displayTitle(value: string) { return value === 'Python Strings Quiz - Revised Edition' ? 'Python Strings Quiz' : value.replace(/\u2014/g, '-') }
 export function displayActivityTitle(value: string) {
   return displayTitle(value).replace(/^(\d+\s*[·.]\s*)(?:CORE|CHALLENGE|STRETCH|LIVE CODING)\s*-\s*/i, '$1')
 }
