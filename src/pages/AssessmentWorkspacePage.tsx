@@ -16,6 +16,53 @@ function timeLabel(seconds: number) {
   const whole = Math.max(0, Math.ceil(seconds))
   return String(Math.floor(whole / 60)).padStart(2, '0') + ':' + String(whole % 60).padStart(2, '0')
 }
+// Keep assigned assessment data immutable; improve only the presentation of the
+// published directions for the standard timed classroom quiz.
+const standardQuizDirections = '20 minutes + 2 minutes extra time. 14 multiple-choice questions (5 points each) and 1 coding task (30 points). Total: 100 points. Work independently. Python IDE allowed; no AI or outside help. Submit before time expires.'
+function usesStandardQuizDirections(assessment: Assessment) {
+  return assessment.instructions.trim() === standardQuizDirections &&
+    assessment.duration_seconds === 1200 && assessment.grace_seconds === 120 &&
+    assessment.questions.length === 15 &&
+    assessment.questions.slice(0, 14).every(q => q.kind === 'multiple_choice' && q.points === 5) &&
+    assessment.questions[14]?.kind === 'python' && assessment.questions[14]?.points === 30
+}
+function AssessmentDirections({ assessment }: { assessment: Assessment }) {
+  if (!usesStandardQuizDirections(assessment)) return <p className="question-prompt">{assessment.instructions}</p>
+  return <section aria-label="Assessment directions" className="exam-directions">
+    <style>{`
+      .exam-directions{max-width:780px;margin:16px 0 20px;font-size:.96rem;line-height:1.55}
+      .exam-directions p{margin:6px 0;line-height:1.55}
+      .exam-directions-meta{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:10px;border-bottom:1px solid var(--line,#dce5df);padding:0 0 12px;margin-bottom:4px}
+      .exam-directions-meta div{padding:8px 12px;border:1px solid var(--line,#dce5df);border-radius:8px;background:rgba(23,107,77,.035)}
+      .exam-directions-meta span,.exam-directions-section small{display:block;font-size:.8rem;color:var(--muted,#526359)}
+      .exam-directions-section{padding:10px 0;border-bottom:1px solid var(--line,#dce5df)}
+      .exam-directions-section h2,.exam-directions-rules h2{font-weight:700;line-height:1.4;font-size:1rem;margin:0;color:inherit;letter-spacing:normal}
+      .exam-directions-section header{display:flex;align-items:baseline;justify-content:space-between;gap:8px;flex-wrap:wrap}
+      .exam-directions-section header strong{white-space:nowrap}
+      .exam-directions-rules{padding-top:12px}
+      @media(max-width:420px){.exam-directions-meta div{padding:7px 9px}.exam-directions{font-size:.9rem}}
+    `}</style>
+    <div className="exam-directions-meta">
+      <div><span>Time limit</span><strong>20 minutes</strong><span>2-minute grace period</span></div>
+      <div><span>Total points</span><strong>100 points</strong><span>15 questions</span></div>
+    </div>
+    <div className="exam-directions-section">
+      <header><h2>Section I: Multiple Choice</h2><strong>70 points</strong></header>
+      <small>Questions 1–14 · 5 points each</small>
+      <p>Select the best answer for each question.</p>
+    </div>
+    <div className="exam-directions-section">
+      <header><h2>Section II: Programming</h2><strong>30 points</strong></header>
+      <small>Question 15</small>
+      <p>Write and test a Python program that meets the given requirements. Partial credit is available.</p>
+    </div>
+    <div className="exam-directions-rules">
+      <h2>General Directions</h2>
+      <p>Work independently. You may use the Python IDE to write and test your code. AI tools and assistance from others are not permitted.</p>
+      <p>Review your answers and submit your work before time expires.</p>
+    </div>
+  </section>
+}
 export function AssessmentWorkspacePage() {
   const { assessmentId } = useParams()
   const { session } = useAuth()
@@ -205,8 +252,8 @@ function AssessmentWorkspace({ assessmentId }: { assessmentId: string }) {
     setActive(i)
     document.getElementById('assessment-current')?.scrollIntoView({ behavior: 'smooth', block: 'start' })
   }
-  if (timed && !started && !done) return <main className="lab-page assessment-page"><Link className="back" to="/assessments"><ArrowLeft size={16}/> Quiz & Code</Link><section className="panel"><h1>{assessment.title}</h1><p>{assessment.instructions}</p><p><strong>{timeLabel(assessment.duration_seconds ?? 0)}</strong> working time + <strong>{timeLabel(assessment.grace_seconds ?? 0)}</strong> extra time. The timer keeps running if you refresh or leave this page. At the end, your latest cloud-saved work is submitted, including unfinished answers.</p><button className="button" disabled={starting || closed} onClick={() => void beginAttempt()}><Clock size={18}/> {starting ? 'Starting…' : 'Start assessment'}</button>{error && <p className="alert" role="alert">{error}</p>}{closed && <p className="alert">This assessment is closed.</p>}</section></main>
-  return <main className="lab-page assessment-page"><Link className="back" to="/assessments"><ArrowLeft size={16}/> Quiz & Code</Link><div className="lab-heading"><div><p className="eyebrow">{assessment.cs_courses?.title}</p><h1>{assessment.title}</h1><p className="question-prompt">{assessment.instructions}</p><p className="work-meta">Due: {formatDate(assessment.due_at)}</p></div><span className="assessment-badge">{completed}/{requiredQuestions.length} required questions completed</span></div>
+  if (timed && !started && !done) return <main className="lab-page assessment-page"><Link className="back" to="/assessments"><ArrowLeft size={16}/> Quiz & Code</Link><section className="panel"><p className="eyebrow">{assessment.cs_courses?.title}</p><h1>{assessment.title}</h1><AssessmentDirections assessment={assessment}/><p>{!usesStandardQuizDirections(assessment) && <><strong>{timeLabel(assessment.duration_seconds ?? 0)}</strong> working time + <strong>{timeLabel(assessment.grace_seconds ?? 0)}</strong> extra time. </>}The timer starts when you select Start assessment and keeps running if you refresh or leave this page. At the end, your latest cloud-saved work is submitted, including unfinished answers, when connected.</p><button className="button" disabled={starting || closed} onClick={() => void beginAttempt()}><Clock size={18}/> {starting ? 'Starting…' : 'Start assessment'}</button>{error && <p className="alert" role="alert">{error}</p>}{closed && <p className="alert">This assessment is closed.</p>}</section></main>
+  return <main className="lab-page assessment-page"><Link className="back" to="/assessments"><ArrowLeft size={16}/> Quiz & Code</Link><div className="lab-heading"><div><p className="eyebrow">{assessment.cs_courses?.title}</p><h1>{assessment.title}</h1><AssessmentDirections assessment={assessment}/>{(!usesStandardQuizDirections(assessment) || assessment.due_at) && <p className="work-meta">Due: {formatDate(assessment.due_at)}</p>}</div><span className="assessment-badge">{completed}/{requiredQuestions.length} required questions completed</span></div>
     {staff && <p className="status">Preview mode: try the quiz and Python exercises. Preview answers are not saved or submitted.</p>}
     {!staff && closed && !done && <p className="alert">This assessment is closed or past its due date. You can still view your saved draft.</p>}
     {done && <section className="assessment-success" role="status"><CheckCircle2/><div><h2>Submitted successfully</h2><p>Your answers and code were saved at {formatDate(submission.submitted_at)}. Submitted work is locked for teacher review.</p><p>Your teacher will announce official scores separately. You can use the answer key, when released, to review and correct your own mistakes.</p></div></section>}
