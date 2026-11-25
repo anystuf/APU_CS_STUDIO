@@ -56,7 +56,7 @@ export function StudentAnswerReviewPage() {
   if (loading) return <main className="page" role="status">Loading your answer review…</main>
   return <main className="page assessment-page">
     <Link className="back" to={`/assessments/${assessmentId}`}><ArrowLeft size={16}/> Back to submission</Link>
-    <div className="page-heading"><div><p className="eyebrow">YOUR PRIVATE EXAM REVIEW</p><h1>{review?.title ?? 'Answer Key & Explanations'}</h1><p>Only your own submitted work is shown here.</p></div></div>
+    <div className="page-heading"><div><p className="eyebrow">YOUR PRIVATE EXAM REVIEW</p><h1>{displayTitle(review?.title ?? 'Answer Key & Explanations')}</h1><p>Only your own submitted work is shown here.</p></div></div>
     {error && <p className="alert" role="alert">{error}</p>}
     {!error && !review?.available && <section className="panel"><LockKeyhole size={22}/><h2>Review not available yet</h2><p>{blocked[review?.reason ?? ''] ?? 'Please check again after your teacher releases the results.'}</p></section>}
     {review?.available && <>
