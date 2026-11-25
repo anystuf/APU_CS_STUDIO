@@ -9,7 +9,7 @@ export function normalizeSubmission(value: unknown): AssessmentSubmission {
 export function isAnswered(question: AssessmentQuestion, answers: AssessmentAnswers) {
   const answer = answers[question.id]
   if (question.kind === 'multiple_choice') return Number.isInteger(answer?.choice) && answer!.choice! >= 0 && answer!.choice! < (question.options?.length ?? 0)
-  if (question.kind === 'python') return Boolean(answer?.code?.trim() && answer.code !== (question.starter_code ?? ''))
+  if (question.kind === 'python') return Boolean(answer?.code?.trim() && answer.code.trim() !== (question.starter_code ?? '').trim())
   return Boolean(answer?.text?.trim())
 }
 
@@ -21,7 +21,7 @@ export function validateQuestions(questions: AssessmentQuestion[], keys: Record<
   if (!questions.length) return 'Add at least one question.'
   for (const [index, q] of questions.entries()) {
     if (!q.prompt.trim()) return `Question ${index + 1}: enter a question prompt.`
-    if (!Number.isInteger(q.points) || q.points < (q.required === false ? 0 : 1) || q.points > 100) return `Question ${index + 1}: points must be ${q.required === false ? 'from 0' : 'at least 1'} and no more than 100.`
+    if (!Number.isInteger(q.points * 2) || q.points < (q.required === false ? 0 : 0.5) || q.points > 100) return `Question ${index + 1}: points must be ${q.required === false ? 'from 0' : 'at least 0.5'} and no more than 100, in 0.5-point increments.`
     if (q.kind === 'multiple_choice' && (!q.options || q.options.length < 2 || q.options.some(o => !o.trim()) || !Number.isInteger(keys[q.id]) || keys[q.id]! < 0 || keys[q.id]! >= q.options.length)) return `Question ${index + 1}: fill in the options and select the correct answer.`
   }
   return null
