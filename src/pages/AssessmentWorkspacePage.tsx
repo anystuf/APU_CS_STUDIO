@@ -271,8 +271,17 @@ function AssessmentWorkspace({ assessmentId }: { assessmentId: string }) {
       .exam-timer[data-grace=true]{border:2px solid #d97706}
       .exam-time{font-size:1.8rem;font-weight:700;letter-spacing:.03em}
       .exam-actions{display:flex;gap:8px;flex-wrap:wrap;justify-content:space-between;align-items:center;margin:12px 0}
-      .exam-notes{margin:12px 0}
-      .exam-notes textarea{width:100%;min-height:70px;box-sizing:border-box;font:inherit;padding:10px;border:1px solid #778294;border-radius:8px;background:transparent;color:inherit}
+      .exam-note-card{margin:12px 0 16px;padding:14px;border-radius:12px;border:1px solid #e0c56a;background:#fff6c4;color:#493b13;box-shadow:0 2px 5px rgba(72,57,12,.06)}
+      .exam-note-head{display:flex;align-items:center;gap:8px;flex-wrap:wrap;margin-bottom:8px}
+      .exam-note-head strong{font-size:.98rem;color:#493b13}
+      .exam-note-head span,.exam-note-card small{font-size:.8rem;color:#66531d}
+      .exam-note-head span{margin-left:auto}
+      .exam-note-card .field{margin:0;display:block}
+      .exam-note-card textarea{display:block;width:100%;min-height:96px;box-sizing:border-box;resize:vertical;font:inherit;line-height:1.45;padding:10px 12px;border:1px solid #c8a94c;border-radius:8px;background:#fffdef;color:#382e10}
+      .exam-note-card textarea::placeholder{color:#77632c}
+      .exam-note-card textarea:focus-visible{outline:2px solid #926b13;outline-offset:2px}
+      .exam-note-card small{display:block;margin-top:7px}
+      @media(max-width:480px){.exam-note-card{padding:12px}.exam-note-head span{margin-left:0;width:100%}.exam-note-card textarea{min-height:84px}}
       .exam-content{min-width:0}
       .exam-content [hidden]{display:none!important}
       @media(max-width:780px){.exam-layout{grid-template-columns:minmax(0,1fr);gap:10px}.exam-nav{position:static}.exam-grid{grid-template-columns:repeat(8,minmax(0,1fr))}.exam-time{font-size:1.4rem}}
@@ -292,7 +301,7 @@ function AssessmentWorkspace({ assessmentId }: { assessmentId: string }) {
         <div className="exam-actions"><button className="button secondary" disabled={activeIndex===0} onClick={() => go(activeIndex-1)}><ChevronLeft size={16}/> Previous</button><span className="work-meta">Question {activeIndex+1} of {questions.length}</span><button className="button secondary" disabled={activeIndex===questions.length-1} onClick={() => go(activeIndex+1)}>Next <ChevronRight size={16}/></button></div>
         {current && !done && <div className="exam-actions"><button type="button" className="button secondary" disabled={locked} aria-pressed={Boolean(marks[current.id]?.flagged)} onClick={() => updateMark(current.id,{flagged:!marks[current.id]?.flagged})}><Flag size={16} fill={marks[current.id]?.flagged?'currentColor':'none'}/>{marks[current.id]?.flagged?'Flagged for review':'Flag for review'}</button>{!isAnswered(current,answers)&&<span className="work-meta">Unanswered</span>}</div>}
         {questions.map((q,i)=><div key={q.id} hidden={i!==activeIndex}><AssessmentQuestion question={q} number={i+1} answer={answers[q.id]??{}} locked={locked} result={undefined} onChange={answer=>change(q.id,answer)}/></div>)}
-        {current && !done && <details className="panel exam-notes" key={current.id} open={Boolean(marks[current.id]?.note) || undefined}><summary><StickyNote size={16}/> Scratch notes (private, saved on this device)</summary><label className="field">Your thinking for question {activeIndex+1}<textarea value={marks[current.id]?.note??''} disabled={locked} maxLength={2000} placeholder="Write a reminder, idea or question to revisit…" onChange={e=>updateMark(current.id,{note:e.target.value})}/></label><small>Notes are not included in your submission or score.</small></details>}
+        {current && !done && <section className="exam-note-card" key={current.id} aria-label="Scratch notes"><div className="exam-note-head"><StickyNote size={17} aria-hidden="true"/><strong>Scratch notes</strong><span>Question {activeIndex+1} · Private</span></div><label className="field"><span className="sr-only">Scratch notes for question {activeIndex+1}</span><textarea value={marks[current.id]?.note??''} disabled={locked} maxLength={2000} placeholder="Jot down an idea or something to revisit..." onChange={e=>updateMark(current.id,{note:e.target.value})}/></label><small>Saved on this device. Not included in your submission or score.</small></section>}
         <div className="exam-actions"><button className="button secondary" disabled={activeIndex===0} onClick={()=>go(activeIndex-1)}><ChevronLeft size={16}/> Previous</button><button className="button secondary" disabled={activeIndex===questions.length-1} onClick={()=>go(activeIndex+1)}>Next <ChevronRight size={16}/></button></div>
       </div>
     </div>
