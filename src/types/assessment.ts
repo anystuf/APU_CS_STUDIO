@@ -15,6 +15,8 @@ export type Assessment = {
   title: string
   instructions: string
   status: 'draft' | 'published' | 'closed'
+  duration_seconds?: number | null
+  grace_seconds?: number
   due_at: string | null
   questions: AssessmentQuestion[]
   created_at: string
@@ -34,6 +36,7 @@ export type AssessmentSubmission = {
   quiz_results: Record<string, { correct: boolean; correct_choice: number; feedback: string }>
   manual_max_score: number
   question_snapshot: AssessmentQuestion[]
+  started_at?: string | null
   submitted_at: string | null
   updated_at: string
   cs_profiles?: { full_name: string; email: string }
