@@ -1,5 +1,7 @@
+import { useIdeTabState } from '../utils/useIdeTabState'
+import { useAssessmentPreviewScroll } from '../utils/useAssessmentPreviewScroll'
 import { displayTitle } from '../utils/learningContent'
-import { useCallback, useEffect, useRef, useState } from 'react'
+import { useCallback, useEffect, useMemo, useRef, useState } from 'react'
 import { Link, useParams } from 'react-router-dom'
 import { ArrowLeft, CheckCircle2, Cloud, Save, Send, Flag, Clock, ChevronLeft, ChevronRight, StickyNote } from 'lucide-react'
 import { supabase } from '../lib/supabase/client'
@@ -66,8 +68,8 @@ function AssessmentDirections({ assessment }: { assessment: Assessment }) {
 }
 export function AssessmentWorkspacePage() {
   const { assessmentId } = useParams()
-  const { session } = useAuth()
-  return <AssessmentWorkspace key={`${session?.user.id}:${assessmentId}`} assessmentId={assessmentId!}/>
+  const { session, role } = useAuth()
+  return <AssessmentWorkspace key={`${session?.user.id}:${assessmentId}:${role}`} assessmentId={assessmentId!}/>
 }
 
 function AssessmentWorkspace({ assessmentId }: { assessmentId: string }) {
@@ -77,7 +79,10 @@ function AssessmentWorkspace({ assessmentId }: { assessmentId: string }) {
   const storageKey = `apu-assessment-v1:${userId}:${assessmentId}`
   const [assessment, setAssessment] = useState<Assessment | null>(null)
   const [submission, setSubmission] = useState<AssessmentSubmission | null>(null)
-  const [answers, setAnswers] = useState<AssessmentAnswers>({})
+  const previewScope = staff ? JSON.stringify(['assessment-preview', userId, assessmentId]) : undefined
+  const [previewAnswers, setPreviewAnswers] = useIdeTabState<AssessmentAnswers>(previewScope, 'answers', {})
+  const [previewMarks, setPreviewMarks] = useIdeTabState<ReviewMarks>(previewScope, 'marks', {})
+  const [savedAnswers, setAnswers] = useState<AssessmentAnswers>({})
   const [loading, setLoading] = useState(true)
   const [error, setError] = useState('')
   const [saveState, setSaveState] = useState('No changes yet')
@@ -85,9 +90,12 @@ function AssessmentWorkspace({ assessmentId }: { assessmentId: string }) {
   const [confirming, setConfirming] = useState(false)
   const [now, setNow] = useState(Date.now())
   const marksKey = storageKey + ':review'
-  const [marks, setMarks] = useState<ReviewMarks>(() => readMarks(marksKey))
+  const [localMarks, setMarks] = useState<ReviewMarks>(() => readMarks(marksKey))
   const [marksWarning, setMarksWarning] = useState('')
-  const [active, setActive] = useState(0)
+  const [active, setActive] = useIdeTabState(previewScope, 'question', 0)
+  useAssessmentPreviewScroll(assessment ? previewScope : undefined)
+  const answers = useMemo(() => staff ? { ...savedAnswers, ...previewAnswers } : savedAnswers, [staff, savedAnswers, previewAnswers])
+  const marks = staff ? previewMarks : localMarks
   const [starting, setStarting] = useState(false)
   const automatic = useRef(false)
   const timed = Boolean(assessment?.duration_seconds) && !staff
@@ -98,7 +106,7 @@ function AssessmentWorkspace({ assessmentId }: { assessmentId: string }) {
   const expired = timed && end !== null && now >= end
   const grace = timed && normalEnd !== null && now >= normalEnd && !expired
   const remaining = normalEnd === null ? (assessment?.duration_seconds ?? 0) : Math.max(0, ((grace ? end! : normalEnd) - now) / 1000)
-  const updateMark = (id: string, value: { flagged?: boolean; note?: string }) => setMarks(old => ({ ...old, [id]: { ...old[id], ...value } }))
+  const updateMark = (id: string, value: { flagged?: boolean; note?: string }) => (staff ? setPreviewMarks : setMarks)(old => ({ ...old, [id]: { ...old[id], ...value } }))
   useEffect(() => {
     if (staff) return
     try { localStorage.setItem(marksKey, JSON.stringify(marks)); setMarksWarning('') } catch { setMarksWarning('Review flags and notes cannot be saved on this device.') }
@@ -196,6 +204,10 @@ function AssessmentWorkspace({ assessmentId }: { assessmentId: string }) {
   }, [])
   const change = (id: string, answer: QuestionAnswer) => {
     if (!canEdit.current || finalizing.current) return
+    if (staff) {
+      setPreviewAnswers(current => ({ ...current, [id]: answer }))
+      return
+    }
     const next = { ...latest.current, [id]: answer }
     latest.current = next; setAnswers(next)
     if (!staff) {
@@ -255,7 +267,7 @@ function AssessmentWorkspace({ assessmentId }: { assessmentId: string }) {
   }
   if (timed && !started && !done) return <main className="lab-page assessment-page"><Link className="back" to="/assessments"><ArrowLeft size={16}/> Quiz & Code</Link><section className="panel"><p className="eyebrow">{assessment.cs_courses?.title}</p><h1>{displayTitle(assessment.title)}</h1><AssessmentDirections assessment={assessment}/><p>{!usesStandardQuizDirections(assessment) && <><strong>{timeLabel(assessment.duration_seconds ?? 0)}</strong> working time + <strong>{timeLabel(assessment.grace_seconds ?? 0)}</strong> extra time. </>}The timer starts when you select Start assessment and keeps running if you refresh or leave this page. At the end, your latest cloud-saved work is submitted, including unfinished answers, when connected.</p><button className="button" disabled={starting || closed} onClick={() => void beginAttempt()}><Clock size={18}/> {starting ? 'Starting…' : 'Start assessment'}</button>{error && <p className="alert" role="alert">{error}</p>}{closed && <p className="alert">This assessment is closed.</p>}</section></main>
   return <main className="lab-page assessment-page"><Link className="back" to="/assessments"><ArrowLeft size={16}/> Quiz & Code</Link><div className="lab-heading"><div><p className="eyebrow">{assessment.cs_courses?.title}</p><h1>{displayTitle(assessment.title)}</h1><AssessmentDirections assessment={assessment}/>{(!usesStandardQuizDirections(assessment) || assessment.due_at) && <p className="work-meta">Due: {formatDate(assessment.due_at)}</p>}</div><span className="assessment-badge">{completed}/{requiredQuestions.length} required questions completed</span></div>
-    {staff && <p className="status">Preview mode: try the quiz and Python exercises. Preview answers are not saved or submitted.</p>}
+    {staff && <p className="status">Preview mode. Duplicate this tab to mirror questions, scrolling, and preview work in this browser. Preview answers are not submitted.</p>}
     {!staff && closed && !done && <p className="alert">This assessment is closed or past its due date. You can still view your saved draft.</p>}
     {done && <section className="assessment-success" role="status"><CheckCircle2/><div><h2>Submitted successfully</h2><p>Your answers and code were saved at {formatDate(submission.submitted_at)}. Submitted work is locked for teacher review.</p><p>Your teacher will announce official scores separately. You can use the answer key, when released, to review and correct your own mistakes.</p></div></section>}
     {done && !staff && <section className="panel"><h2>Review your answers</h2><p>Once your teacher finishes grading and releases the answer key, you can see explanations and a reference solution from your own account.</p><Link className="button secondary" to={`/assessments/${assessmentId}/answers`}>Answer key & explanations</Link></section>}
@@ -302,7 +314,7 @@ function AssessmentWorkspace({ assessmentId }: { assessmentId: string }) {
         <div className="exam-actions"><button className="button secondary" disabled={activeIndex===0} onClick={() => go(activeIndex-1)}><ChevronLeft size={16}/> Previous</button><span className="work-meta">Question {activeIndex+1} of {questions.length}</span><button className="button secondary" disabled={activeIndex===questions.length-1} onClick={() => go(activeIndex+1)}>Next <ChevronRight size={16}/></button></div>
         {current && !done && <div className="exam-actions"><button type="button" className="button secondary" disabled={locked} aria-pressed={Boolean(marks[current.id]?.flagged)} onClick={() => updateMark(current.id,{flagged:!marks[current.id]?.flagged})}><Flag size={16} fill={marks[current.id]?.flagged?'currentColor':'none'}/>{marks[current.id]?.flagged?'Flagged for review':'Flag for review'}</button>{!isAnswered(current,answers)&&<span className="work-meta">Unanswered</span>}</div>}
         {questions.map((q,i)=><div key={q.id} hidden={i!==activeIndex}><AssessmentQuestion question={q} number={i+1} answer={answers[q.id]??{}} locked={locked} result={undefined} onChange={answer=>change(q.id,answer)}/></div>)}
-        {current && !done && <section className="exam-note-card" key={current.id} aria-label="Scratch notes"><div className="exam-note-head"><StickyNote size={17} aria-hidden="true"/><strong>Scratch notes</strong><span>Question {activeIndex+1} · Private</span></div><label className="field"><span className="sr-only">Scratch notes for question {activeIndex+1}</span><textarea value={marks[current.id]?.note??''} disabled={locked} maxLength={2000} placeholder="Jot down an idea or something to revisit..." onChange={e=>updateMark(current.id,{note:e.target.value})}/></label><small>Saved on this device. Not included in your submission or score.</small></section>}
+        {current && !done && <section className="exam-note-card" key={current.id} aria-label="Scratch notes"><div className="exam-note-head"><StickyNote size={17} aria-hidden="true"/><strong>Scratch notes</strong><span>Question {activeIndex+1} · Private</span></div><label className="field"><span className="sr-only">Scratch notes for question {activeIndex+1}</span><textarea value={marks[current.id]?.note??''} disabled={locked} maxLength={2000} placeholder="Jot down an idea or something to revisit..." onChange={e=>updateMark(current.id,{note:e.target.value})}/></label><small>{staff ? 'Shared with your preview tabs for this quiz.' : 'Saved on this device. Not included in your submission or score.'}</small></section>}
         <div className="exam-actions"><button className="button secondary" disabled={activeIndex===0} onClick={()=>go(activeIndex-1)}><ChevronLeft size={16}/> Previous</button><button className="button secondary" disabled={activeIndex===questions.length-1} onClick={()=>go(activeIndex+1)}>Next <ChevronRight size={16}/></button></div>
       </div>
     </div>
