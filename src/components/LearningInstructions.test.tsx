@@ -1,6 +1,6 @@
 import { renderToStaticMarkup } from 'react-dom/server'
 import { describe, expect, it } from 'vitest'
-import { LearningInstructions } from './LearningInstructions'
+import { GuidedLesson, LearningInstructions } from './LearningInstructions'
 
 describe('readable learning instructions', () => {
   it('renders headings, emphasis and Python references as real formatting', () => {
@@ -36,5 +36,25 @@ describe('readable learning instructions', () => {
     const html = renderToStaticMarkup(<LearningInstructions text={'Calculate `a | b`.'}/>)
     expect(html).not.toContain('The vertical bar')
     expect(html).toContain('<code>a | b</code>')
+  })
+})
+
+describe('guided lesson', () => {
+  it('shows section navigation and a real formative check without exposing the answer', () => {
+    const check = JSON.stringify({question:'What is the list length?',options:['2','3','4'],answer:1,feedback:'One object is added.'})
+    const html = renderToStaticMarkup(<GuidedLesson text={'# GUIDED LESSON\n## Practice\nPredict first.\n```check\n'+check+'\n```\n## Apply\nFinish the activity.'}/>)
+    expect(html).toContain('Check your understanding')
+    expect(html).toContain('What is the list length?')
+    expect(html).toContain('2. Apply')
+    expect(html).toContain('0/2 sections reviewed')
+    expect(html).not.toContain('One object is added.')
+  })
+  it('renders editable runnable Python with the answer initially hidden', () => {
+    const demo = JSON.stringify({code:'print([1, 2] * 2)',output:'[1, 2, 1, 2]',explanation:'Repetition creates a longer list.'})
+    const html = renderToStaticMarkup(<GuidedLesson text={'# GUIDED LESSON\n## Repeat\n```demo\n'+demo+'\n```'}/>)
+    expect(html).toContain('Run Python')
+    expect(html).toContain('print([1, 2] * 2)')
+    expect(html).toContain('Reveal expected output')
+    expect(html).not.toContain('Repetition creates a longer list.')
   })
 })
