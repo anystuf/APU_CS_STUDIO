@@ -24,7 +24,7 @@ function GuidedRun({ data }: { data: GuidedDemo }) {
     catch (error) { setResult(error instanceof Error ? error.message : 'Unable to run Python. Try again.') }
     finally { setRunning(false) }
   }
-  return <div className="guided-demo"><div className="guided-editor"><div className="guided-editor-bar"><span>Python</span><span>example.py</span></div><CodeMirror aria-label="Editable Python example" value={code} onChange={setCode} extensions={[python()]} theme="dark" minHeight="128px" readOnly={running} basicSetup={{lineNumbers:true,foldGutter:false}}/></div><div className="guided-actions"><button type="button" className="button compact" disabled={running} onClick={() => void run()}><Play size={15} aria-hidden="true"/> {running ? 'Running…' : 'Run code'}</button>{running && <button type="button" className="button compact secondary" onClick={stopPython}><Square size={15} aria-hidden="true"/> Stop</button>}<button type="button" className="button compact secondary" disabled={running} onClick={() => { setCode(data.code); setResult(''); setRevealed(false) }}><RotateCcw size={15} aria-hidden="true"/> Reset</button><button type="button" className="button compact secondary" aria-expanded={revealed} onClick={() => setRevealed(v => !v)}>{revealed ? 'Hide explanation' : 'Show explanation'}</button></div>{result && <div aria-live="polite"><h4>Output</h4><pre>{result}</pre></div>}{revealed && <div><h4>Expected output</h4><pre>{data.output}</pre>{Array.isArray(data.visual) && data.visual.map((row, i) => <div key={i} style={{margin: '.75rem 0'}}><p><strong>{row.label}</strong></p><div style={{display:'flex',flexWrap:'wrap',gap:'.35rem'}}>{row.items.map((item, j) => <span key={j} style={{border:'1px solid #9aaea4',borderRadius:'.45rem',padding:'.5rem',fontFamily:'monospace'}}>{item}</span>)}</div></div>)}<p>{data.explanation}</p></div>}</div>
+  return <div className="guided-demo"><div className="guided-editor"><div className="guided-editor-bar"><span>Python</span><span>example.py</span></div><CodeMirror aria-label="Editable Python example" value={code} onChange={setCode} extensions={[python()]} theme="dark" minHeight="128px" readOnly={running} basicSetup={{lineNumbers:true,foldGutter:false}}/></div><div className="guided-actions"><button type="button" className="button compact" disabled={running} onClick={() => void run()}><Play size={15} aria-hidden="true"/> {running ? 'Running…' : 'Run code'}</button>{running && <button type="button" className="button compact secondary" onClick={stopPython}><Square size={15} aria-hidden="true"/> Stop</button>}<button type="button" className="button compact secondary" disabled={running} onClick={() => { setCode(data.code); setResult(''); setRevealed(false) }}><RotateCcw size={15} aria-hidden="true"/> Reset</button><button type="button" className="button compact secondary" aria-expanded={revealed} onClick={() => setRevealed(v => !v)}>{revealed ? 'Hide explanation' : 'Show explanation'}</button></div>{result && <div aria-live="polite"><h4>Output</h4><pre>{result}</pre></div>}{revealed && <div><h4>Expected output (original example)</h4><pre>{data.output}</pre>{Array.isArray(data.visual) && data.visual.map((row, i) => <div key={i} style={{margin: '.75rem 0'}}><p><strong>{row.label}</strong></p><div style={{display:'flex',flexWrap:'wrap',gap:'.35rem'}}>{row.items.map((item, j) => <span key={j} style={{border:'1px solid #9aaea4',borderRadius:'.45rem',padding:'.5rem',fontFamily:'monospace'}}>{item}</span>)}</div></div>)}<p>{data.explanation}</p></div>}</div>
 }
 function GuidedSectionBody({ markdown }: { markdown: string }) {
   const parts = markdown.split(/(```(?:check|demo)\n[\s\S]*?\n```)/g)
@@ -41,7 +41,7 @@ function GuidedSectionBody({ markdown }: { markdown: string }) {
   })}</>
 }
 export function GuidedLesson({ text }: { text: string }) {
-  const sections = instructionSections(text.replace(/^# GUIDED LESSON\s*\n/, ''))
+  const sections = guidedSections(text)
   const [active, setActive] = useState(0)
   const [complete, setComplete] = useState<number[]>([])
   const current = sections[active]
@@ -60,7 +60,7 @@ export function GuidedLesson({ text }: { text: string }) {
 }
 
 import Markdown, { type Components } from 'react-markdown'
-import { instructionBody, instructionSections, instructionTime } from '../utils/learningContent'
+import { guidedSections, instructionBody, instructionSections, instructionTime } from '../utils/learningContent'
 
 const titleComponents: Components = { p: ({ children }) => <h2>{children}</h2> }
 const titleElements = ['p', 'strong', 'em', 'code']

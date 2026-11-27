@@ -54,3 +54,31 @@ export function instructionTime(text: string) { return text.match(/\(target:\s*(
 export function instructionBody(text: string) {
   return text.replace(/^(?:CORE|CHALLENGE|STRETCH)\s*[\u2014-]\s*(?:REQUIRED|OPTIONAL)\s*\(target:[^)]*\)\s*/i, '')
 }
+
+/** Guided content is authored with explicit Markdown headings, not legacy step markers. */
+export function guidedSections(text: string): { title: string; markdown: string }[] {
+  const sections: { title: string; markdown: string }[] = []
+  let current: { title: string; markdown: string } | undefined
+  let fence: string | null = null
+  for (const line of text.replace(/^# GUIDED LESSON[^\S\n]*\r?\n/, '').split(/\r?\n/)) {
+    const boundary = line.trim().match(/^(`{3,}|~{3,})/)
+    if (!fence) {
+      const heading = line.match(/^##\s+(.+)$/)
+      if (heading) {
+        current = { title: heading[1]!, markdown: '' }
+        sections.push(current)
+        continue
+      }
+    }
+    if (!current && line.trim()) {
+      current = { title: 'Start here', markdown: '' }
+      sections.push(current)
+    }
+    if (current) current.markdown += line + '\n'
+    if (boundary) {
+      if (!fence) fence = boundary[1]!
+      else if (boundary[1]![0] === fence[0] && boundary[1]!.length >= fence.length) fence = null
+    }
+  }
+  return sections
+}

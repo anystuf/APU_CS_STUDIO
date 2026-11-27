@@ -59,3 +59,16 @@ describe('guided lesson', () => {
     expect(html).not.toContain('Repetition creates a longer list.')
   })
 })
+
+describe('actual guided lesson headings', () => {
+  it('keeps all seven sections, including numbered headings and submission instructions', () => {
+    const titles = ['Start here · 2 min','1. Nested lists and slices · 4 min','2. List operations and statistics · 4 min','3. Adding elements · 4 min','4. Removing elements · 3 min','5. Sorting and debugging · 3 min','Practice · 30 min']
+    const content = '# GUIDED LESSON\n\n' + titles.map(title => '## '+title+'\n\nRead the example.\n\nSubmit your work.').join('\n\n')
+    const html = renderToStaticMarkup(<GuidedLesson text={content}/>)
+    expect(html).toContain('0/7 sections reviewed')
+    expect(html).toContain('Nested lists and slices')
+    expect(html).toContain('Sorting and debugging')
+    expect(html).not.toContain('>Steps<')
+    expect(html).not.toContain('>Before you submit<')
+  })
+})
