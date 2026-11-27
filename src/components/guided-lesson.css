@@ -1,0 +1,19 @@
+.guided-lesson{display:grid;gap:1rem;width:100%;min-width:0}
+.guided-header{display:flex;flex-wrap:wrap;align-items:center;justify-content:space-between;gap:.5rem}
+.guided-header span,.guided-lesson .work-meta{font-size:.85rem}
+.guided-lesson progress{width:100%;height:.65rem;accent-color:#16745d}
+.guided-nav{display:flex;flex-wrap:wrap;gap:.5rem}
+.guided-nav button,.guided-options button{background:transparent;color:inherit;border:1px solid #9aaea4;border-radius:.55rem;padding:.65rem .85rem;text-align:left;cursor:pointer;font:inherit;min-height:44px}
+.guided-nav button[aria-current=step]{border-color:#16745d;box-shadow:inset 0 0 0 1px #16745d;font-weight:700}
+.guided-content{min-width:0;border:1px solid #baccc2;border-radius:.8rem;padding:clamp(.8rem,2vw,1.4rem);overflow-wrap:anywhere}
+.guided-content h2{font-size:1.25rem;margin-top:0}.guided-content h3{font-size:1rem;margin-top:0}
+.guided-content p,.guided-content li{line-height:1.65}
+.guided-check,.guided-demo{border:1px solid #baccc2;border-radius:.7rem;padding:1rem;margin:1rem 0}
+.guided-options{display:grid;gap:.5rem}.guided-options button:hover,.guided-nav button:hover{box-shadow:inset 0 0 0 1px #16745d}
+.guided-options .guided-correct{border:2px solid #168361;background:#e0f2e7;color:#164e36}
+.guided-options .guided-retry{border:2px solid #b77929;background:#fff3dc;color:#75450e}
+.guided-demo textarea{display:block;width:100%;box-sizing:border-box;background:#17251f;color:#edf8f1;line-height:1.6;font-family:ui-monospace,SFMono-Regular,Consolas,monospace;font-size:.94rem;padding:.8rem;border:1px solid #62776c;border-radius:.5rem;resize:vertical;tab-size:4}
+.guided-demo pre,.guided-content pre{white-space:pre-wrap;overflow-wrap:anywhere;background:#17251f;color:#edf8f1;border-radius:.5rem;padding:.8rem;max-width:100%;overflow:auto}
+.guided-actions{display:flex;flex-wrap:wrap;align-items:center;gap:.5rem;margin:.6rem 0}
+.guided-feedback{font-weight:600}.guided-nav button:focus-visible,.guided-options button:focus-visible{outline:3px solid #438dba;outline-offset:2px}
+@media(max-width:480px){.guided-content{padding:.8rem}.guided-nav button{width:100%}.guided-actions .button{flex:1 1 auto}.guided-demo,.guided-check{padding:.7rem}}
