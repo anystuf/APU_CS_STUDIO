@@ -3,7 +3,7 @@ import { Link, useParams } from 'react-router-dom'
 import { supabase } from '../lib/supabase/client'
 import { useAuth } from '../features/auth/AuthProvider'
 import type { Activity, Course, Lesson, Module } from '../types/classroom'
-import { LearningInstructions } from '../components/LearningInstructions'
+import { GuidedLesson, LearningInstructions } from '../components/LearningInstructions'
 import { displayActivityTitle, displayTitle } from '../utils/learningContent'
 
 export function StudentCoursePage() {
@@ -60,7 +60,7 @@ export function StudentCoursePage() {
         const assessment = lesson.cs_assessments
         return <article className="panel student-lesson" key={lesson.id}><h3>{displayTitle(lesson.title)}</h3>
           {!!lesson.learning_objectives?.length && <section className="lesson-goals"><h4>What you’ll learn</h4><ul>{lesson.learning_objectives.map((objective, i) => <li key={i}>{objective}</li>)}</ul></section>}
-          {lesson.introduction && <details className="lesson-overview"><summary>Lesson overview and schedule</summary><LearningInstructions text={lesson.introduction}/></details>}
+          {lesson.introduction && (lesson.introduction.startsWith('# GUIDED LESSON\n') ? <GuidedLesson text={lesson.introduction}/> : <details className="lesson-overview"><summary>Lesson overview and schedule</summary><LearningInstructions text={lesson.introduction}/></details>)}
           {assessment && assessment.status !== 'draft' && <section className="lesson-required"><h4>Required assessment</h4><p>{displayTitle(assessment.title)}</p><Link className="button compact" to={`/assessments/${assessment.id}`}>{assessmentDone.includes(assessment.id) ? 'View submission' : assessment.status === 'closed' ? 'View closed assessment' : 'Open assessment'}</Link></section>}
           {required.length > 0 && <section><h4>Required activities</h4>{links(required)}</section>}
           {extension.length > 0 && <section><h4>Extension activities</h4><p>Additional practice after your required work.</p>{links(extension)}</section>}
