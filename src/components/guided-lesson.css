@@ -17,3 +17,32 @@
 .guided-actions{display:flex;flex-wrap:wrap;align-items:center;gap:.5rem;margin:.6rem 0}
 .guided-feedback{font-weight:600}.guided-nav button:focus-visible,.guided-options button:focus-visible{outline:3px solid #438dba;outline-offset:2px}
 @media(max-width:480px){.guided-content{padding:.8rem}.guided-nav button{width:100%}.guided-actions .button{flex:1 1 auto}.guided-demo,.guided-check{padding:.7rem}}
+
+/* Courseware: one reading surface, quiet navigation and a familiar code editor. */
+.current-lesson-label{font-size:.78rem;font-weight:700;letter-spacing:.045em;color:#16745d;margin:0 0 .4rem}
+.student-lesson.current-lesson{border-top:3px solid #16745d}
+.dashboard-current-lesson{display:flex;justify-content:space-between;align-items:flex-start;gap:1rem;margin-bottom:1.25rem;border-left:3px solid #16745d}
+.dashboard-current-lesson h2{margin:.2rem 0 .5rem;font-size:clamp(1.2rem,2.6vw,1.65rem)}
+.current-lesson-module{font-size:.85rem;margin:0;color:inherit;opacity:.75}
+.guided-layout{display:grid;grid-template-columns:minmax(155px,220px) minmax(0,1fr);gap:1.25rem;align-items:start}
+.guided-main{min-width:0}
+.guided-nav{display:flex;flex-direction:column;gap:.2rem;border-right:1px solid #baccc2;padding-right:.65rem;position:sticky;top:1rem}
+.guided-nav button{display:flex;align-items:flex-start;gap:.6rem;border:0;border-radius:.3rem;padding:.65rem .5rem;font-size:.88rem;line-height:1.35}
+.guided-nav button[aria-current=step]{box-shadow:none;border-left:3px solid #16745d;background:#e4efe8;color:#174c39;padding-left:calc(.5rem - 3px)}
+.guided-nav button:hover{box-shadow:none;text-decoration:underline}
+.guided-step-number{display:flex;align-items:center;justify-content:center;flex:none;width:1.4rem;height:1.4rem;font-size:.8rem;font-variant-numeric:tabular-nums;color:inherit}
+.guided-step-name{display:block}.guided-step-name small{display:block;font-weight:400;margin-top:.2rem;opacity:.75}
+.guided-content{border:0;border-radius:0;padding:0 .15rem;line-height:1.65}
+.guided-content h2{font-size:clamp(1.3rem,2.5vw,1.65rem);letter-spacing:-.025em;margin:.2rem 0 .85rem}
+.guided-section-meta{font-size:.8rem;opacity:.7}
+.guided-demo{border:0;padding:0;margin:1rem 0 1.4rem}
+.guided-editor{border:1px solid #354940;border-radius:.5rem;overflow:hidden;background:#17251f;color:#edf8f1}
+.guided-editor-bar{display:flex;justify-content:space-between;gap:.5rem;padding:.55rem .75rem;background:#24352d;color:#e0eae4;font-size:.78rem}
+.guided-editor .cm-editor{font-size:.94rem}
+.guided-editor .cm-scroller{overflow:auto}
+.guided-check{border:0;border-top:1px solid #baccc2;border-radius:0;padding:1rem 0 0}
+.guided-options button{border-radius:.35rem}
+.guided-options button[aria-pressed=true]{box-shadow:none}
+.guided-pagination{border-top:1px solid #baccc2;justify-content:space-between;padding-top:1rem}
+.guided-feedback-correct{color:#16745d}.guided-feedback-retry{color:#986018}
+@media(max-width:760px){.guided-layout{grid-template-columns:1fr;gap:.9rem}.guided-nav{position:static;display:flex;flex-direction:row;overflow-x:auto;flex-wrap:nowrap;border-right:0;border-bottom:1px solid #baccc2;padding:0 0 .5rem}.guided-nav button{flex:0 0 145px;min-width:145px;width:auto}.guided-nav button[aria-current=step]{border-left:0;border-bottom:3px solid #16745d;padding-left:.5rem}.guided-content{padding:0}.dashboard-current-lesson>svg{display:none}}

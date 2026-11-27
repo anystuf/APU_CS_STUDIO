@@ -1,5 +1,5 @@
 import { useCallback, useEffect, useState } from 'react'
-import { Link, useParams } from 'react-router-dom'
+import { Link, useParams, useSearchParams } from 'react-router-dom'
 import { supabase } from '../lib/supabase/client'
 import { useAuth } from '../features/auth/AuthProvider'
 import type { Activity, Course, Lesson, Module } from '../types/classroom'
@@ -8,6 +8,7 @@ import { displayActivityTitle, displayTitle } from '../utils/learningContent'
 
 export function StudentCoursePage() {
   const { courseId } = useParams()
+  const [params] = useSearchParams()
   const { session } = useAuth()
   const [course, setCourse] = useState<Course | null>(null)
   const [modules, setModules] = useState<Module[]>([])
@@ -42,6 +43,9 @@ export function StudentCoursePage() {
   }, [courseId, session])
   useEffect(() => { void load() }, [load])
   const query = search.trim().toLowerCase()
+  const guided = lessons.filter(l => l.introduction?.startsWith('# GUIDED LESSON\n') && modules.some(m => m.id === l.module_id)).sort((a,b) => (b.created_at ?? '').localeCompare(a.created_at ?? ''))
+  const current = guided.find(l => l.id === params.get('lesson')) ?? guided[0]
+  const orderedModules = [...modules].sort((a,b) => Number(b.id === current?.module_id) - Number(a.id === current?.module_id) || a.position - b.position)
   const matches = (lesson: Lesson) => !query || `${lesson.title} ${activities.filter(a => a.lesson_id === lesson.id).map(a => a.title).join(' ')}`.toLowerCase().includes(query)
   const links = (items: Activity[]) => <ul className="student-task-list">{items.map(activity => {
     const status = submitted.includes(activity.id) ? 'Submitted' : drafts.includes(activity.id) ? 'Draft saved' : 'Not started'
@@ -50,17 +54,17 @@ export function StudentCoursePage() {
   return <main className="page student-course"><Link className="back" to="/student">← Dashboard</Link><p className="eyebrow">YOUR COURSE</p><h1>{course ? displayTitle(course.title) : loading ? 'Loading course…' : 'Course unavailable'}</h1>{course && <p className="lede">{course.description}</p>}
     <label className="field course-search">Find a lesson or activity<input type="search" value={search} onChange={event => setSearch(event.target.value)} placeholder="For example: W10.5, functions, or clean"/></label>
     {loading && <p role="status">Loading your lessons and activity status…</p>}{error && <div className="alert" role="alert">{error}<button className="button secondary" onClick={() => void load()}>Retry loading</button></div>}
-    {!loading && !error && <><p className="filter-summary" role="status">{lessons.filter(matches).length} lessons match. Open a required activity to start your work.</p><div className="learning-path">{modules.map(module => {
-      const visibleLessons = lessons.filter(l => l.module_id === module.id && matches(l))
+    {!loading && !error && <><p className="filter-summary" role="status">{lessons.filter(matches).length} lessons match. Open a required activity to start your work.</p><div className="learning-path">{orderedModules.map(module => {
+      const visibleLessons = lessons.filter(l => l.module_id === module.id && matches(l)).sort((a,b) => Number(b.id === current?.id) - Number(a.id === current?.id) || a.position - b.position)
       if (!visibleLessons.length) return null
       return <section key={module.id}><h2>{displayTitle(module.title)}</h2>{visibleLessons.map(lesson => {
         const tasks = activities.filter(a => a.lesson_id === lesson.id)
         const required = tasks.filter(a => a.is_required !== false)
         const extension = tasks.filter(a => a.is_required === false)
         const assessment = lesson.cs_assessments
-        return <article className="panel student-lesson" key={lesson.id}><h3>{displayTitle(lesson.title)}</h3>
+        return <article className={`panel student-lesson${lesson.id === current?.id ? " current-lesson" : ""}`} key={lesson.id} id={`lesson-${lesson.id}`}>{lesson.id === current?.id && <p className="current-lesson-label">Current lesson</p>}<h3>{displayTitle(lesson.title)}</h3>
           {!!lesson.learning_objectives?.length && <section className="lesson-goals"><h4>What you’ll learn</h4><ul>{lesson.learning_objectives.map((objective, i) => <li key={i}>{objective}</li>)}</ul></section>}
-          {lesson.introduction && (lesson.introduction.startsWith('# GUIDED LESSON\n') ? <GuidedLesson text={lesson.introduction}/> : <details className="lesson-overview"><summary>Lesson overview and schedule</summary><LearningInstructions text={lesson.introduction}/></details>)}
+          {lesson.introduction && (lesson.introduction.startsWith('# GUIDED LESSON\n') ? <GuidedLesson key={lesson.id} text={lesson.introduction}/> : <details className="lesson-overview"><summary>Lesson overview and schedule</summary><LearningInstructions text={lesson.introduction}/></details>)}
           {assessment && assessment.status !== 'draft' && <section className="lesson-required"><h4>Required assessment</h4><p>{displayTitle(assessment.title)}</p><Link className="button compact" to={`/assessments/${assessment.id}`}>{assessmentDone.includes(assessment.id) ? 'View submission' : assessment.status === 'closed' ? 'View closed assessment' : 'Open assessment'}</Link></section>}
           {required.length > 0 && <section><h4>Required activities</h4>{links(required)}</section>}
           {extension.length > 0 && <section><h4>Extension activities</h4><p>Additional practice after your required work.</p>{links(extension)}</section>}

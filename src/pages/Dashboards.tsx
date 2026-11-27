@@ -3,6 +3,7 @@ import { ArrowRight, BookOpen, ClipboardCheck, Code2, Users } from 'lucide-react
 import { Link, Navigate } from 'react-router-dom'
 import { useAuth } from '../features/auth/AuthProvider'
 import { supabase } from '../lib/supabase/client'
+import { displayTitle } from '../utils/learningContent'
 import type { Course, TeacherFeedback } from '../types/classroom'
 
 export function HomePage() { const { role } = useAuth(); return <Navigate to={role === 'student' ? '/student' : '/teacher'} replace/> }
@@ -10,6 +11,7 @@ export function HomePage() { const { role } = useAuth(); return <Navigate to={ro
 export function StudentDashboard() {
   const { session } = useAuth()
   const [courses, setCourses] = useState<Course[]>([])
+  const [currentLesson, setCurrentLesson] = useState<{id:string;title:string;courseId:string;moduleTitle:string} | null>(null)
   const [feedback, setFeedback] = useState<TeacherFeedback[]>([])
   const [loading, setLoading] = useState(true)
   const [error, setError] = useState('')
@@ -21,7 +23,16 @@ export function StudentDashboard() {
         supabase.from('cs_teacher_feedback').select('*,cs_activity_attempts(*,cs_activities(title))').eq('student_id', session!.user.id).order('created_at', { ascending: false }).limit(5),
       ])
       if (c.error || f.error) throw c.error ?? f.error
-      setCourses((c.data ?? []) as Course[]); setFeedback((f.data ?? []) as TeacherFeedback[])
+      const enrolled = (c.data ?? []) as Course[]
+      setCourses(enrolled); setFeedback((f.data ?? []) as TeacherFeedback[]); setCurrentLesson(null)
+      if (enrolled.length) {
+        const latest = await supabase.from('cs_lessons').select('id,title,cs_modules!inner(course_id,title,status)').eq('status','published').eq('cs_modules.status','published').in('cs_modules.course_id',enrolled.map(course => course.id)).like('introduction','# GUIDED LESSON%').order('created_at',{ascending:false}).limit(1).maybeSingle()
+        if (!latest.error && latest.data) {
+          const row = latest.data as unknown as {id:string;title:string;cs_modules:{course_id:string;title:string}|{course_id:string;title:string}[]}
+          const module = Array.isArray(row.cs_modules) ? row.cs_modules[0] : row.cs_modules
+          if (module && enrolled.some(course => course.id === module.course_id)) setCurrentLesson({id:row.id,title:row.title,courseId:module.course_id,moduleTitle:module.title})
+        }
+      }
     } catch { setError('We couldn’t load your courses and feedback. Your saved work has not been changed. Check your connection and retry.') }
     finally { setLoading(false) }
   }, [session])
@@ -30,7 +41,7 @@ export function StudentDashboard() {
     <p className="eyebrow">YOUR LEARNING</p><h1>Welcome back to Computer Science</h1><p className="lede">Open your course, finish assigned work, or practice Python.</p>
     {loading && <p role="status">Loading courses and feedback…</p>}
     {error && <div className="alert" role="alert">{error}<button className="button secondary" onClick={() => void load()}>Retry loading</button></div>}
-    {!loading && !error && <>{courses[0] ? <section className="hero-card"><div><span className="pill">Your course</span><h2>{courses[0].title}</h2><p>{courses[0].description}</p><Link className="button link-button" to={`/student/course/${courses[0].id}`}>Open course <ArrowRight size={18}/></Link></div><BookOpen size={60} aria-hidden="true"/></section> : <div className="empty"><BookOpen aria-hidden="true"/><h2>You’re not enrolled in a course yet</h2><p>Ask your teacher to add you to the course. You can practice in the Python IDE while you wait.</p><Link className="button" to="/python-ide">Practice Python</Link></div>}
+    {!loading && !error && <>{currentLesson && <section className="panel current-lesson dashboard-current-lesson"><div><p className="current-lesson-label">Current lesson</p><p className="current-lesson-module">{displayTitle(currentLesson.moduleTitle)}</p><h2>{displayTitle(currentLesson.title)}</h2><p>Read the lesson, run the examples, and complete the assigned activity.</p><Link className="button link-button" to={`/student/course/${currentLesson.courseId}?lesson=${currentLesson.id}`}>Open lesson <ArrowRight size={18}/></Link></div><BookOpen size={34} aria-hidden="true"/></section>}{courses[0] ? <section className="hero-card"><div><span className="pill">Your course</span><h2>{courses[0].title}</h2><p>{courses[0].description}</p><Link className="button link-button" to={`/student/course/${courses[0].id}`}>Open course <ArrowRight size={18}/></Link></div><BookOpen size={60} aria-hidden="true"/></section> : <div className="empty"><BookOpen aria-hidden="true"/><h2>You’re not enrolled in a course yet</h2><p>Ask your teacher to add you to the course. You can practice in the Python IDE while you wait.</p><Link className="button" to="/python-ide">Practice Python</Link></div>}
     {courses.length > 1 && <section><h2>Your courses</h2><div className="course-grid">{courses.map(c => <Link className="course-card" key={c.id} to={`/student/course/${c.id}`}><BookOpen aria-hidden="true"/><h3>{c.title}</h3><p>{c.description}</p><span className="text-link">Open course <ArrowRight size={16}/></span></Link>)}</div></section>}
     {feedback.length > 0 && <section className="feedback-section"><h2>Teacher feedback</h2>{feedback.map(f => <article className="feedback-card" key={f.id}><h3>{f.cs_activity_attempts?.cs_activities?.title ?? 'Recent activity'}</h3><p>{f.comment}</p><time dateTime={f.created_at}>{new Date(f.created_at).toLocaleDateString()}</time></article>)}</section>}</>}
     <div className="dashboard-actions"><Link className="action-card" to="/assessments"><ClipboardCheck aria-hidden="true"/><div><h2>Assigned assessments</h2><p>Answer questions, write code, and submit in Quiz & Code.</p></div><ArrowRight aria-hidden="true"/></Link><Link className="action-card" to="/python-ide"><Code2 aria-hidden="true"/><div><h2>Practice Python</h2><p>Run code and save files. This workspace does not submit assignments.</p></div><ArrowRight aria-hidden="true"/></Link></div>
