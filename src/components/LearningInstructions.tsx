@@ -1,9 +1,9 @@
-import { useState } from 'react'
+import { useEffect, useState } from 'react'
 import { runPython, stopPython } from '../lib/pyodide/runner'
 import './guided-lesson.css'
 
 type GuidedCheck = { question: string; options: string[]; answer: number; feedback: string }
-type GuidedDemo = { code: string; output: string; explanation: string }
+type GuidedDemo = { code: string; output: string; explanation: string; visual?: { label: string; items: string[] }[] }
 
 function ConceptCheck({ data }: { data: GuidedCheck }) {
   const [selected, setSelected] = useState<number | null>(null)
@@ -14,13 +14,14 @@ function GuidedRun({ data }: { data: GuidedDemo }) {
   const [result, setResult] = useState('')
   const [running, setRunning] = useState(false)
   const [revealed, setRevealed] = useState(false)
+  useEffect(() => () => stopPython(), [])
   async function run() {
     setRunning(true); setResult('')
     try { const r = await runPython(code, ''); setResult(r.stderr || r.stdout || '(No output)') }
     catch (error) { setResult(error instanceof Error ? error.message : 'Unable to run Python. Try again.') }
     finally { setRunning(false) }
   }
-  return <div className="guided-demo"><h3>Predict → Run → Investigate → Modify</h3><label className="field">Editable Python example<textarea spellCheck={false} value={code} onChange={e => setCode(e.target.value)} rows={Math.min(12, Math.max(4, code.split('\n').length + 1))} disabled={running}/></label><div className="guided-actions"><button type="button" className="button compact" disabled={running} onClick={() => void run()}>{running ? 'Running…' : 'Run Python'}</button>{running && <button type="button" className="button compact secondary" onClick={stopPython}>Stop</button>}<button type="button" className="button compact secondary" disabled={running} onClick={() => { setCode(data.code); setResult(''); setRevealed(false) }}>Reset example</button><button type="button" className="button compact secondary" aria-expanded={revealed} onClick={() => setRevealed(v => !v)}>{revealed ? 'Hide explanation' : 'Reveal expected output'}</button></div>{result && <div aria-live="polite"><h4>Your output</h4><pre>{result}</pre></div>}{revealed && <div><h4>Expected output (original code)</h4><pre>{data.output}</pre><p>{data.explanation}</p></div>}</div>
+  return <div className="guided-demo"><h3>Predict → Run → Investigate → Modify</h3><label className="field">Editable Python example<textarea spellCheck={false} value={code} onChange={e => setCode(e.target.value)} rows={Math.min(12, Math.max(4, code.split('\n').length + 1))} disabled={running}/></label><div className="guided-actions"><button type="button" className="button compact" disabled={running} onClick={() => void run()}>{running ? 'Running…' : 'Run Python'}</button>{running && <button type="button" className="button compact secondary" onClick={stopPython}>Stop</button>}<button type="button" className="button compact secondary" disabled={running} onClick={() => { setCode(data.code); setResult(''); setRevealed(false) }}>Reset example</button><button type="button" className="button compact secondary" aria-expanded={revealed} onClick={() => setRevealed(v => !v)}>{revealed ? 'Hide explanation' : 'Reveal expected output'}</button></div>{result && <div aria-live="polite"><h4>Your output</h4><pre>{result}</pre></div>}{revealed && <div><h4>Expected output (original code)</h4><pre>{data.output}</pre>{Array.isArray(data.visual) && data.visual.map((row, i) => <div key={i} style={{margin: '.75rem 0'}}><p><strong>{row.label}</strong></p><div style={{display:'flex',flexWrap:'wrap',gap:'.35rem'}}>{row.items.map((item, j) => <span key={j} style={{border:'1px solid #9aaea4',borderRadius:'.45rem',padding:'.5rem',fontFamily:'monospace'}}>{item}</span>)}</div></div>)}<p>{data.explanation}</p></div>}</div>
 }
 function GuidedSectionBody({ markdown }: { markdown: string }) {
   const parts = markdown.split(/(```(?:check|demo)\n[\s\S]*?\n```)/g)
