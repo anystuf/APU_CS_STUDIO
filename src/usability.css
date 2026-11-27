@@ -130,3 +130,37 @@ section, article, fieldset, .builder-grid > *, .two-column > *, .dashboard-actio
   .button, .pill, .classroom-nav a[aria-current="page"] { border: 1px solid ButtonText; }
   :focus-visible { outline: 3px solid Highlight !important; }
 }
+
+
+/* Dashboard and shell: consistent controls and compact learning hierarchy.
+   Eager stylesheet: dashboard must not depend on a lazy lesson route. */
+a.button { display:inline-flex; align-items:center; justify-content:center; gap:8px; max-width:100%; line-height:1.35; vertical-align:middle; }
+a.button svg { flex:none; }
+.page > .dashboard-current-lesson { display:flex; align-items:flex-start; justify-content:space-between; gap:20px; padding:24px; margin:0 0 16px; border-left:3px solid var(--green); }
+.dashboard-current-lesson > div,.hero-card > div,.action-card > div { min-width:0; }
+.dashboard-current-lesson > svg,.hero-card > svg,.action-card > svg { flex:none; }
+.dashboard-current-lesson .current-lesson-label { margin:0 0 6px; font-size:13px; font-weight:700; color:var(--green); letter-spacing:.025em; }
+.dashboard-current-lesson .current-lesson-module { margin:0 0 4px; font-size:14px; color:var(--muted); opacity:1; }
+.page > .dashboard-current-lesson h2 { font-size:clamp(1.2rem,2.2vw,1.55rem); line-height:1.35; margin:0 0 8px; }
+.dashboard-current-lesson p:not([class]) { margin:0 0 14px; color:var(--muted); }
+.dashboard-current-lesson .link-button { margin:0; background:var(--green); color:white; }
+.page > .dashboard-current-lesson + .hero-card { background:white; color:var(--ink); border:1px solid var(--line); padding:20px 24px; margin:0 0 20px; gap:16px; }
+.dashboard-current-lesson + .hero-card .pill { background:transparent; color:var(--muted); padding:0; font-weight:600; }
+.dashboard-current-lesson + .hero-card h2 { font-size:clamp(1.05rem,1.8vw,1.25rem); margin:4px 0 6px; }
+.dashboard-current-lesson + .hero-card p { color:var(--muted); margin:0 0 12px; max-width:none; }
+.dashboard-current-lesson + .hero-card .link-button { background:white; color:var(--green); border:1px solid var(--line); margin:0; }
+.dashboard-current-lesson + .hero-card > svg { width:32px; height:32px; color:var(--green); }
+.dashboard-actions { grid-template-columns:repeat(2,minmax(0,1fr)); }
+.dashboard-actions .action-card { gap:12px; padding:18px; align-items:center; }
+.dashboard-actions .action-card h2 { font-size:1.05rem; margin:0 0 4px; }
+.dashboard-actions .action-card p { font-size:.9rem; line-height:1.5; margin:0; }
+.dashboard-actions .action-card:hover { border-color:var(--green); }
+@media(max-width:800px) { .dashboard-actions { grid-template-columns:minmax(0,1fr); } }
+@media(max-width:600px) {
+ .page > .dashboard-current-lesson,.page > .dashboard-current-lesson + .hero-card { padding:16px; }
+ .dashboard-current-lesson > svg,.dashboard-current-lesson + .hero-card > svg { display:none; }
+ .dashboard-actions .action-card { padding:14px; gap:10px; }
+ .app-shell .topbar { flex-wrap:wrap; }
+ .app-shell .topbar .brand { white-space:normal; overflow-wrap:anywhere; }
+ .app-shell .topbar .projector-toggle,.app-shell .topbar .sign-out { flex-shrink:0; }
+}
